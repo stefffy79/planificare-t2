@@ -1,0 +1,4141 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1"
+    />
+    <title>TuraManager</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surf: #161b22;
+        --surf2: #21262d;
+        --brd: #30363d;
+        --txt: #e6edf3;
+        --mut: #8b949e;
+        --acc: #f0a500;
+        --acc2: #e36209;
+        --day: #1f6feb;
+        --ngt: #6e3bb5;
+        --ok: #2ea043;
+        --err: #da3633;
+        --wrn: #d29922;
+        --r: 8px;
+        --rl: 14px;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--txt);
+        min-height: 100vh;
+        font-size: 14px;
+      }
+      /* AUTH */
+      #auth-screen {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .auth-card {
+        background: var(--surf);
+        border: 1px solid var(--brd);
+        border-radius: var(--rl);
+        padding: 2.5rem 2rem;
+        width: 100%;
+        max-width: 400px;
+      }
+      .auth-logo {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--acc);
+        letter-spacing: -0.5px;
+        margin-bottom: 0.25rem;
+      }
+      .auth-logo span {
+        color: var(--mut);
+        font-weight: 400;
+      }
+      .auth-sub {
+        color: var(--mut);
+        font-size: 0.85rem;
+        margin-bottom: 2rem;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--mut);
+        margin-bottom: 0.3rem;
+        margin-top: 0.9rem;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--brd);
+        border-radius: var(--r);
+        padding: 0.6rem 0.75rem;
+        color: var(--txt);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--acc);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: var(--r);
+        border: 1px solid var(--brd);
+        background: var(--surf2);
+        color: var(--txt);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-weight: 500;
+      }
+      .btn:hover {
+        background: var(--brd);
+      }
+      .btn-primary {
+        background: var(--acc);
+        border-color: var(--acc);
+        color: #000;
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 0.7rem;
+        font-size: 0.95rem;
+      }
+      .btn-primary:hover {
+        background: var(--acc2);
+      }
+      .btn-sm {
+        padding: 0.3rem 0.65rem;
+        font-size: 0.78rem;
+      }
+      .btn-xs {
+        padding: 0.2rem 0.45rem;
+        font-size: 0.72rem;
+      }
+      .btn-ok {
+        border-color: var(--ok);
+        color: var(--ok);
+      }
+      .btn-ok:hover {
+        background: var(--ok);
+        color: #fff;
+      }
+      .btn-err {
+        border-color: var(--err);
+        color: var(--err);
+      }
+      .btn-err:hover {
+        background: var(--err);
+        color: #fff;
+      }
+      .btn-wrn {
+        border-color: var(--wrn);
+        color: var(--wrn);
+      }
+      .btn-wrn:hover {
+        background: var(--wrn);
+        color: #000;
+      }
+      .amsg {
+        font-size: 0.8rem;
+        margin-top: 0.75rem;
+        text-align: center;
+      }
+      .amsg.err {
+        color: var(--err);
+      }
+      .amsg.ok {
+        color: var(--ok);
+      }
+      .a-toggle {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: 0.82rem;
+        color: var(--mut);
+      }
+      .a-toggle a {
+        color: var(--acc);
+        cursor: pointer;
+      }
+      /* APP */
+      #app-screen {
+        display: none;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .topbar {
+        background: var(--surf);
+        border-bottom: 1px solid var(--brd);
+        padding: 0.55rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .topbar-logo {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--acc);
+      }
+      .topbar-r {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .brole {
+        font-size: 0.68rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: 20px;
+        font-weight: 700;
+        border: 1px solid;
+      }
+      .brole.adm {
+        border-color: var(--acc);
+        color: var(--acc);
+      }
+      .brole.usr {
+        border-color: var(--day);
+        color: var(--day);
+      }
+      .nav-tabs {
+        background: var(--surf);
+        border-bottom: 1px solid var(--brd);
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 0 0.75rem;
+      }
+      .nav-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .nav-tab {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.82rem;
+        color: var(--mut);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        transition: all 0.15s;
+      }
+      .nav-tab:hover {
+        color: var(--txt);
+      }
+      .nav-tab.active {
+        color: var(--acc);
+        border-bottom-color: var(--acc);
+      }
+      .mc {
+        flex: 1;
+        padding: 0.9rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      /* PANELS */
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+      /* CALENDAR */
+      .cal-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .cal-ttl {
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        background: var(--brd);
+        border-radius: var(--rl);
+        overflow: hidden;
+        border: 1px solid var(--brd);
+      }
+      .cal-dow {
+        background: var(--surf2);
+        text-align: center;
+        padding: 0.45rem 0;
+        font-size: 0.72rem;
+        color: var(--mut);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .cal-dow.we {
+        color: #e3b341;
+      }
+      .cal-day {
+        background: var(--surf);
+        min-height: 86px;
+        padding: 0.35rem;
+        cursor: pointer;
+        transition: background 0.1s;
+        position: relative;
+        overflow: hidden;
+      }
+      .cal-day:hover {
+        background: var(--surf2);
+      }
+      .cal-day.empty {
+        background: var(--bg);
+        cursor: default;
+      }
+      .cal-day.wknd {
+        background: #161c2a;
+      }
+      .cal-day.hday {
+        background: #1c1212;
+      }
+      .cal-day.today .dn {
+        background: var(--acc);
+        color: #000;
+        border-radius: 50%;
+      }
+      .dn {
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-bottom: 0.15rem;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .dn.wknd {
+        color: #e3b341;
+      }
+      .dn.hday {
+        color: #f85149;
+      }
+      .hname {
+        font-size: 0.52rem;
+        color: #f85149;
+        line-height: 1.1;
+        margin-bottom: 2px;
+        overflow: hidden;
+        max-height: 16px;
+      }
+      .spill {
+        font-size: 0.6rem;
+        padding: 0.12rem 0.28rem;
+        border-radius: 3px;
+        margin-bottom: 2px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .sp-d {
+        background: #1f6feb33;
+        color: #5b9cf6;
+        border: 1px solid var(--day);
+      }
+      .sp-n {
+        background: #6e3bb544;
+        color: #b794f4;
+        border: 1px solid var(--ngt);
+      }
+      .sp-ne {
+        background: #3b1f6622;
+        color: #c4a8f0;
+        border: 1px dashed var(--ngt);
+        opacity: 0.85;
+      }
+      .sp-c {
+        background: #2ea04322;
+        color: #56d364;
+        border: 1px solid var(--ok);
+      }
+      .sp-lib {
+        background: #d2992222;
+        color: #e3b341;
+        border: 1px solid var(--wrn);
+      }
+      .sdsl-tag {
+        font-size: 0.48rem;
+        color: var(--wrn);
+        padding: 0 1px;
+      }
+      .nbar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ngt), transparent);
+        opacity: 0.6;
+      }
+      .nbar.end {
+        background: linear-gradient(90deg, transparent, var(--ngt));
+      }
+      /* MODAL */
+      .mo {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.78);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .mo.open {
+        display: flex;
+      }
+      .mbox {
+        background: var(--surf);
+        border: 1px solid var(--brd);
+        border-radius: var(--rl);
+        padding: 1.4rem;
+        width: 100%;
+        max-width: 600px;
+        max-height: 92vh;
+        overflow-y: auto;
+      }
+      .mhdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.1rem;
+      }
+      .mttl {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .mx {
+        background: none;
+        border: none;
+        color: var(--mut);
+        cursor: pointer;
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+      .mx:hover {
+        color: var(--txt);
+      }
+      /* TABLES */
+      .stbl {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .stbl th {
+        background: var(--surf2);
+        padding: 0.45rem 0.7rem;
+        text-align: left;
+        font-size: 0.72rem;
+        color: var(--mut);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .stbl td {
+        padding: 0.55rem 0.7rem;
+        border-top: 1px solid var(--brd);
+        font-size: 0.82rem;
+      }
+      .stbl tr:hover td {
+        background: var(--surf2);
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .b-ok {
+        background: #2ea04322;
+        color: #56d364;
+      }
+      .b-err {
+        background: #da363322;
+        color: #f85149;
+      }
+      .b-co {
+        background: #d2992222;
+        color: #e3b341;
+      }
+      .b-cm {
+        background: #1f6feb22;
+        color: #79c0ff;
+      }
+      .b-sdsl {
+        background: #f0a50022;
+        color: #f0a500;
+      }
+      .b-del {
+        background: #9333ea22;
+        color: #c084fc;
+      }
+      .b-inv {
+        background: #0891b222;
+        color: #67e8f9;
+      }
+      .b-lib {
+        background: #16a34a22;
+        color: #86efac;
+      }
+      .b-tnp {
+        background: #dc262622;
+        color: #fca5a5;
+      }
+      .b-trec {
+        background: #7c3aed22;
+        color: #ddd6fe;
+      }
+      /* STATS */
+      .stats-g {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+        gap: 0.65rem;
+        margin-bottom: 1.1rem;
+      }
+      .sc {
+        background: var(--surf2);
+        border-radius: var(--r);
+        padding: 0.8rem;
+        text-align: center;
+      }
+      .sc-v {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--acc);
+      }
+      .sc-l {
+        font-size: 0.72rem;
+        color: var(--mut);
+        margin-top: 0.15rem;
+      }
+      /* WORKER CAL */
+      .wc-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        background: var(--brd);
+        border-radius: var(--rl);
+        overflow: hidden;
+        border: 1px solid var(--brd);
+      }
+      .wcd {
+        background: var(--surf);
+        padding: 0.35rem 0.2rem;
+        text-align: center;
+        min-height: 54px;
+        font-size: 0.72rem;
+        position: relative;
+      }
+      .wcd.empty {
+        background: var(--bg);
+      }
+      .wcd.wknd {
+        background: #161c2a;
+      }
+      .wcd.hday {
+        background: #1c1212;
+      }
+      .wcd.today {
+        outline: 1px solid var(--acc);
+        outline-offset: -1px;
+      }
+      .wcn {
+        font-size: 0.67rem;
+        color: var(--mut);
+        margin-bottom: 1px;
+      }
+      .wcn.wk {
+        color: #e3b341;
+      }
+      .wcn.hd {
+        color: #f85149;
+      }
+      .wc-d {
+        color: #5b9cf6;
+        font-weight: 700;
+        font-size: 0.72rem;
+      }
+      .wc-n {
+        color: #b794f4;
+        font-weight: 700;
+        font-size: 0.72rem;
+      }
+      .wc-ne {
+        color: #c4a8f0;
+        font-weight: 600;
+        font-size: 0.68rem;
+        opacity: 0.85;
+      }
+      .wc-sp {
+        color: #56d364;
+        font-weight: 700;
+        font-size: 0.68rem;
+      }
+      .wc-lib {
+        color: #e3b341;
+        font-weight: 600;
+        font-size: 0.65rem;
+      }
+      .wc-sdsl {
+        color: var(--wrn);
+        font-size: 0.58rem;
+      }
+      .wc-nbar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--ngt);
+        opacity: 0.7;
+      }
+      .wc-nbar.end {
+        background: linear-gradient(90deg, transparent, var(--ngt));
+      }
+      /* FORMS */
+      .fr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem;
+      }
+      @media (max-width: 480px) {
+        .fr {
+          grid-template-columns: 1fr;
+        }
+      }
+      .fr3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.65rem;
+      }
+      @media (max-width: 560px) {
+        .fr3 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .fa {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: 1.1rem;
+        flex-wrap: wrap;
+      }
+      .sh {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.9rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .st {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .dvd {
+        border: none;
+        border-top: 1px solid var(--brd);
+        margin: 1.1rem 0;
+      }
+      .ibox {
+        background: var(--surf2);
+        border: 1px solid var(--brd);
+        border-radius: var(--r);
+        padding: 0.65rem 0.9rem;
+        font-size: 0.8rem;
+        color: var(--mut);
+        margin-bottom: 0.9rem;
+        line-height: 1.6;
+      }
+      .ibox strong {
+        color: var(--txt);
+      }
+      .spinner {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border: 2px solid var(--brd);
+        border-top-color: var(--acc);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--mut);
+      }
+      .tw {
+        overflow-x: auto;
+        border-radius: var(--rl);
+        border: 1px solid var(--brd);
+      }
+      .lt {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 480px;
+      }
+      .lt th {
+        background: var(--surf2);
+        padding: 0.55rem 0.7rem;
+        text-align: left;
+        font-size: 0.72rem;
+        color: var(--mut);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+      }
+      .lt td {
+        padding: 0.6rem 0.7rem;
+        border-top: 1px solid var(--brd);
+        font-size: 0.82rem;
+      }
+      .lt tr:hover td {
+        background: var(--surf2);
+      }
+      .pb {
+        background: var(--brd);
+        border-radius: 4px;
+        height: 7px;
+        overflow: hidden;
+        margin-top: 3px;
+      }
+      .pf {
+        height: 100%;
+        background: var(--acc);
+        border-radius: 4px;
+      }
+      .pf.over {
+        background: var(--err);
+      }
+      .pf.warn {
+        background: var(--wrn);
+      }
+      .legend {
+        display: flex;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        margin-top: 0.65rem;
+      }
+      .li {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.7rem;
+        color: var(--mut);
+      }
+      .ld {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      select option {
+        background: var(--surf2);
+      }
+      /* SERVICII TAB */
+      .srv-tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+      }
+      .srv-tbl th {
+        background: var(--surf2);
+        padding: 0.4rem 0.5rem;
+        text-align: center;
+        font-size: 0.68rem;
+        color: var(--mut);
+        font-weight: 600;
+        border: 1px solid var(--brd);
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .srv-tbl th.name-col {
+        text-align: left;
+        min-width: 120px;
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: var(--surf2);
+      }
+      .srv-tbl td {
+        padding: 0.35rem 0.4rem;
+        border: 1px solid var(--brd);
+        text-align: center;
+        white-space: nowrap;
+      }
+      .srv-tbl td.name-col {
+        text-align: left;
+        background: var(--surf2);
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        font-weight: 500;
+      }
+      .srv-cell-d {
+        background: #1f6feb18;
+        color: #5b9cf6;
+        font-weight: 600;
+      }
+      .srv-cell-n {
+        background: #6e3bb518;
+        color: #b794f4;
+        font-weight: 600;
+      }
+      .srv-cell-lib {
+        background: #d2992215;
+        color: #e3b341;
+      }
+      .srv-cell-co {
+        background: #d2992215;
+        color: #e3b341;
+      }
+      .srv-cell-cm {
+        background: #1f6feb15;
+        color: #79c0ff;
+      }
+      .srv-cell-del {
+        background: #9333ea15;
+        color: #c084fc;
+      }
+      .srv-cell-inv {
+        background: #0891b215;
+        color: #67e8f9;
+      }
+      .srv-tbl-wrap {
+        overflow: auto;
+        max-height: 70vh;
+        border: 1px solid var(--brd);
+        border-radius: var(--rl);
+      }
+      /* AVIZ SDSL */
+      .sdsl-alert {
+        background: #d2992215;
+        border: 1px solid var(--wrn);
+        border-radius: var(--r);
+        padding: 0.55rem 0.8rem;
+        font-size: 0.8rem;
+        color: var(--wrn);
+        margin-bottom: 0.8rem;
+      }
+      @media (max-width: 600px) {
+        .cal-day {
+          min-height: 64px;
+          padding: 0.25rem;
+        }
+        .spill {
+          font-size: 0.55rem;
+        }
+        .mc {
+          padding: 0.65rem 0.4rem;
+        }
+        .mbox {
+          padding: 0.9rem;
+        }
+        .stats-g {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const SUPABASE_URL = "https://rzxmpurkybzaewgjwskc.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6eG1wdXJreWJ6YWV3Z2p3c2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTc1NTUsImV4cCI6MjA5MTQ3MzU1NX0.7Go_muRFk7Wyxd5ZAnLIQHxCMfaDp_1WhXayd99s3Xg";
+    </script>
+
+    <!-- AUTH -->
+    <div id="auth-screen">
+      <div class="auth-card">
+        <div class="auth-logo">Tura<span>Manager</span></div>
+        <div class="auth-sub">Sistem de gestiune program serviciu</div>
+        <div id="auth-login">
+          <label>Email</label
+          ><input
+            type="email"
+            id="li-email"
+            placeholder="utilizator@exemplu.ro"
+            autocomplete="email"
+          />
+          <label>Parolă</label
+          ><input
+            type="password"
+            id="li-pass"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <button class="btn btn-primary" onclick="doLogin()">
+            Autentificare
+          </button>
+          <div id="li-msg" class="amsg"></div>
+          <div class="a-toggle">
+            Nu ai cont? <a onclick="showReg()">Înregistrare</a>
+          </div>
+        </div>
+        <div id="auth-reg" style="display: none">
+          <label>Nume complet</label
+          ><input type="text" id="rg-name" placeholder="Ion Ionescu" />
+          <label>Email</label
+          ><input
+            type="email"
+            id="rg-email"
+            placeholder="utilizator@exemplu.ro"
+          />
+          <label>Parolă</label
+          ><input type="password" id="rg-pass" placeholder="Min. 6 caractere" />
+          <button class="btn btn-primary" onclick="doRegister()">
+            Creare cont
+          </button>
+          <div id="rg-msg" class="amsg"></div>
+          <div class="a-toggle">
+            Ai cont? <a onclick="showLogin()">Autentificare</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="app-screen">
+      <div class="topbar">
+        <div class="topbar-logo">TuraManager</div>
+        <div class="topbar-r">
+          <span id="u-name" style="font-size: 0.8rem; color: var(--mut)"></span>
+          <span id="u-role" class="brole"></span>
+          <button class="btn btn-sm" onclick="doLogout()">Ieșire</button>
+        </div>
+      </div>
+      <div class="nav-tabs" id="nav-tabs">
+        <div
+          class="nav-tab active"
+          data-p="calendar"
+          onclick="switchPanel('calendar')"
+        >
+          📅 Calendar
+        </div>
+        <div
+          class="nav-tab"
+          data-p="situatie"
+          onclick="switchPanel('situatie')"
+        >
+          👤 Situație
+        </div>
+        <div
+          class="nav-tab"
+          data-p="prezenta"
+          onclick="switchPanel('prezenta')"
+        >
+          👁 Prezență tură
+        </div>
+        <div class="nav-tab" data-p="ture" onclick="switchPanel('ture')">
+          🕐 Ture
+        </div>
+        <div
+          class="nav-tab"
+          data-p="servicii-tab"
+          onclick="switchPanel('servicii-tab')"
+        >
+          🛡 Servicii
+        </div>
+        <div
+          class="nav-tab adm-only"
+          data-p="personal"
+          onclick="switchPanel('personal')"
+          style="display: none"
+        >
+          👥 Personal
+        </div>
+        <div
+          class="nav-tab adm-only"
+          data-p="program"
+          onclick="switchPanel('program')"
+          style="display: none"
+        >
+          🗓 Program tură
+        </div>
+        <div
+          class="nav-tab adm-only"
+          data-p="sarbatori"
+          onclick="switchPanel('sarbatori')"
+          style="display: none"
+        >
+          🎄 Sărbători
+        </div>
+        <div
+          class="nav-tab adm-only"
+          data-p="rapoarte"
+          onclick="switchPanel('rapoarte')"
+          style="display: none"
+        >
+          📊 Rapoarte
+        </div>
+      </div>
+
+      <div class="mc">
+        <!-- ══ CALENDAR ══ -->
+        <div class="panel active" id="panel-calendar">
+          <div class="cal-hdr">
+            <div class="cal-ttl" id="cal-title"></div>
+            <div style="display: flex; gap: 0.4rem">
+              <button class="btn btn-sm" onclick="calNav(-1)">‹</button>
+              <button class="btn btn-sm" onclick="calNav(0)">Azi</button>
+              <button class="btn btn-sm" onclick="calNav(1)">›</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="legend" style="margin-top: 0.65rem">
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #1f6feb55; border: 1px solid var(--day)"
+              ></div>
+              Zi
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #6e3bb544; border: 1px solid var(--ngt)"
+              ></div>
+              Noapte start
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #3b1f6633; border: 1px dashed var(--ngt)"
+              ></div>
+              Noapte cont.
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #161c2a; border: 1px solid var(--brd)"
+              ></div>
+              Weekend
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #1c1212; border: 1px solid #6e2020"
+              ></div>
+              Sărbătoare
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #d2992222; border: 1px solid var(--wrn)"
+              ></div>
+              Liber/CO/CM
+            </div>
+            <div class="li">
+              <div
+                class="ld"
+                style="background: #f0a50022; border: 1px solid var(--wrn)"
+              ></div>
+              S.D.S.L.
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SITUAȚIE PERSONALĂ ══ -->
+        <div class="panel" id="panel-situatie">
+          <div class="sh">
+            <div class="st">Situație personală</div>
+            <div
+              style="
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                flex-wrap: wrap;
+              "
+            >
+              <select
+                id="sit-w"
+                onchange="loadSituatie()"
+                style="width: auto"
+              ></select>
+              <select
+                id="sit-m"
+                onchange="loadSituatie()"
+                style="width: auto"
+              ></select>
+              <select
+                id="sit-y"
+                onchange="loadSituatie()"
+                style="width: auto"
+              ></select>
+              <button class="btn btn-sm btn-ok" onclick="openRaspModal()">
+                + Adaugă răspândire
+              </button>
+            </div>
+          </div>
+          <div id="sit-content">
+            <div class="empty-state">Selectează lucrătorul și perioada</div>
+          </div>
+        </div>
+
+        <!-- ══ PREZENȚĂ TURĂ ══ -->
+        <div class="panel" id="panel-prezenta">
+          <div class="sh">
+            <div class="st">Prezență tură completă</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <select
+                id="prez-m"
+                onchange="loadPrezenta()"
+                style="width: auto"
+              ></select>
+              <select
+                id="prez-y"
+                onchange="loadPrezenta()"
+                style="width: auto"
+              ></select>
+            </div>
+          </div>
+          <div id="prez-content">
+            <div class="empty-state">Selectează perioada</div>
+          </div>
+        </div>
+
+        <!-- ══ PERSONAL ══ -->
+        <div class="panel" id="panel-personal">
+          <div class="sh">
+            <div class="st">Gestionare personal</div>
+            <button class="btn btn-sm btn-ok" onclick="openWorkerModal()">
+              + Adaugă
+            </button>
+          </div>
+          <div class="tw">
+            <table class="lt">
+              <thead>
+                <tr>
+                  <th>Nr.</th>
+                  <th>Nume</th>
+                  <th>Grad</th>
+                  <th>Rol</th>
+                  <th>Status</th>
+                  <th>Cont</th>
+                  <th>Acțiuni</th>
+                </tr>
+              </thead>
+              <tbody id="workers-tbody">
+                <tr>
+                  <td colspan="7" class="empty-state">Se încarcă...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ PROGRAM TURĂ ══ -->
+        <div class="panel" id="panel-program">
+          <div class="sh">
+            <div class="st">Program tură</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <select
+                id="prog-m"
+                onchange="loadProgram()"
+                style="width: auto"
+              ></select>
+              <select
+                id="prog-y"
+                onchange="loadProgram()"
+                style="width: auto"
+              ></select>
+              <button class="btn btn-sm btn-ok" onclick="openProgModal()">
+                + Adaugă
+              </button>
+            </div>
+          </div>
+          <div id="prog-cal-wrap"></div>
+        </div>
+
+        <!-- ══ TURE INDIVIDUALE ══ -->
+        <div class="panel" id="panel-ture">
+          <div class="sh">
+            <div class="st">Ture individuale</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <select
+                id="tura-y"
+                onchange="onTuraYMChange()"
+                style="width: auto"
+              ></select>
+              <select
+                id="tura-m"
+                onchange="onTuraYMChange()"
+                style="width: auto"
+              ></select>
+              <select
+                id="tura-d"
+                onchange="loadTureZi()"
+                style="width: auto"
+              ></select>
+            </div>
+          </div>
+          <div id="ture-content">
+            <div class="empty-state">Selectează data</div>
+          </div>
+        </div>
+
+        <!-- ══ SERVICII TAB ══ -->
+        <div class="panel" id="panel-servicii-tab">
+          <div class="sh">
+            <div class="st">Situație servicii</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <select
+                id="srv-m"
+                onchange="loadServiciiTab()"
+                style="width: auto"
+              ></select>
+              <select
+                id="srv-y"
+                onchange="loadServiciiTab()"
+                style="width: auto"
+              ></select>
+            </div>
+          </div>
+          <div id="srv-content">
+            <div class="empty-state">Selectează perioada</div>
+          </div>
+        </div>
+
+        <!-- ══ SĂRBĂTORI ══ -->
+        <div class="panel" id="panel-sarbatori">
+          <div class="sh">
+            <div class="st">Gestiune sărbători legale</div>
+            <button class="btn btn-sm btn-ok" onclick="openHolModal()">
+              + Adaugă
+            </button>
+          </div>
+          <div class="ibox">
+            Sărbătorile legale standard (inclusiv
+            <strong>Vinerea Mare</strong> și Paști ortodox) sunt calculate
+            automat. Adaugă here sărbători suplimentare.
+          </div>
+          <div id="hol-auto"></div>
+          <div class="st" style="margin: 0.75rem 0; font-size: 0.88rem">
+            Adăugate manual
+          </div>
+          <div class="tw">
+            <table class="lt">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Denumire</th>
+                  <th>Tip</th>
+                  <th>Acțiuni</th>
+                </tr>
+              </thead>
+              <tbody id="hol-tbody">
+                <tr>
+                  <td colspan="4" class="empty-state">
+                    Nicio sărbătoare adăugată
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ RAPOARTE ══ -->
+        <div class="panel" id="panel-rapoarte">
+          <div class="sh">
+            <div class="st">Rapoarte lunare</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <select
+                id="rap-m"
+                onchange="loadRapoarte()"
+                style="width: auto"
+              ></select>
+              <select
+                id="rap-y"
+                onchange="loadRapoarte()"
+                style="width: auto"
+              ></select>
+            </div>
+          </div>
+          <div id="rap-gen"></div>
+          <div id="rap-sdsl-alert"></div>
+          <div class="tw" style="margin-top: 0.75rem">
+            <table class="lt">
+              <thead>
+                <tr>
+                  <th>Nr.</th>
+                  <th>Nume</th>
+                  <th>Grad</th>
+                  <th>Ture zi</th>
+                  <th>Ture noapte</th>
+                  <th>Ore lucrate</th>
+                  <th>S.D.S.L.</th>
+                  <th>Normă</th>
+                  <th>Ore supl.</th>
+                  <th>Progres</th>
+                </tr>
+              </thead>
+              <tbody id="rap-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MODALS ══ -->
+
+    <!-- SHIFT DETAIL -->
+    <div class="mo" id="mo-detail">
+      <div class="mbox" style="max-width: 680px">
+        <div class="mhdr">
+          <div class="mttl" id="mo-detail-title">Detaliu zi</div>
+          <button class="mx" onclick="closeMo('mo-detail')">✕</button>
+        </div>
+        <div id="mo-detail-body"></div>
+        <div class="fa" id="mo-detail-acts"></div>
+      </div>
+    </div>
+
+    <!-- WORKER -->
+    <div class="mo" id="mo-worker">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl" id="mo-wttl">Adaugă lucrător</div>
+          <button class="mx" onclick="closeMo('mo-worker')">✕</button>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Nr. ordine</label
+            ><input type="number" id="wm-nr" min="1" placeholder="1" />
+          </div>
+          <div>
+            <label>Nume complet *</label
+            ><input type="text" id="wm-name" placeholder="Ion Ionescu" />
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Grad</label
+            ><input type="text" id="wm-grad" placeholder="Subofițer..." />
+          </div>
+          <div>
+            <label>Rol aplicație</label
+            ><select id="wm-role">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Normă zilnică (ore)</label
+            ><input type="number" id="wm-norm" value="8" min="1" max="24" />
+          </div>
+          <div>
+            <label>Status</label
+            ><select id="wm-status">
+              <option value="activ">Activ</option>
+              <option value="inactiv">Inactiv</option>
+            </select>
+          </div>
+        </div>
+        <label>Email cont Supabase</label
+        ><input type="email" id="wm-email" placeholder="ion@exemplu.ro" />
+        <div id="wm-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-worker')">Anulează</button
+          ><button class="btn btn-ok" onclick="saveWorker()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRAM MODAL -->
+    <div class="mo" id="mo-prog">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl" id="mo-pttl">Adaugă program tură</div>
+          <button class="mx" onclick="closeMo('mo-prog')">✕</button>
+        </div>
+        <div id="pm-sdsl-info" style="display: none" class="sdsl-alert"></div>
+        <div class="fr">
+          <div>
+            <label>Data start *</label
+            ><input type="date" id="pm-date" onchange="onPmChange()" />
+          </div>
+          <div>
+            <label>Tip tură</label>
+            <select id="pm-type" onchange="onPmChange()">
+              <option value="zi">☀ Zi (08:00–20:00)</option>
+              <option value="noapte">🌙 Noapte (20:00–08:00+1)</option>
+              <option value="custom">⚡ Personalizat</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Oră început</label
+            ><input type="time" id="pm-start" value="08:00" />
+          </div>
+          <div>
+            <label>Oră sfârșit</label
+            ><input type="time" id="pm-end" value="20:00" />
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Ore lucrate</label
+            ><input
+              type="number"
+              id="pm-hours"
+              value="12"
+              min="0"
+              max="24"
+              step=".5"
+            />
+          </div>
+          <div>
+            <label>Status</label
+            ><select id="pm-status">
+              <option value="prezent">Prezent</option>
+              <option value="co">Concediu odihnă</option>
+            </select>
+          </div>
+        </div>
+        <label>Observații</label><textarea id="pm-notes" rows="2"></textarea>
+        <div id="pm-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-prog')">Anulează</button>
+          <button
+            class="btn btn-err"
+            id="pm-del-btn"
+            onclick="deleteProgShift()"
+            style="display: none"
+          >
+            Șterge
+          </button>
+          <button class="btn btn-ok" onclick="saveProgram()">
+            Salvează pentru toți
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHIFT INDIVIDUAL -->
+    <div class="mo" id="mo-shift">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl" id="mo-sttl">Editează tură</div>
+          <button class="mx" onclick="closeMo('mo-shift')">✕</button>
+        </div>
+        <div id="ms-sdsl-info" style="display: none" class="sdsl-alert"></div>
+        <div
+          id="ms-night-info"
+          style="
+            display: none;
+            font-size: 0.8rem;
+            color: #b794f4;
+            padding: 0.4rem 0.6rem;
+            background: #6e3bb511;
+            border-radius: var(--r);
+            border: 1px dashed var(--ngt);
+            margin-bottom: 0.5rem;
+          "
+        ></div>
+        <label>Lucrător</label
+        ><select id="ms-worker"></select>
+        <div class="fr">
+          <div>
+            <label>Data start *</label
+            ><input type="date" id="ms-date" onchange="onMsChange()" />
+          </div>
+          <div>
+            <label>Tip tură</label>
+            <select id="ms-type" onchange="onMsTypeChange()">
+              <option value="zi">☀ Zi</option>
+              <option value="noapte">🌙 Noapte (+1 zi)</option>
+              <option value="custom">⚡ Personalizat</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Oră început</label
+            ><input type="time" id="ms-start" value="08:00" />
+          </div>
+          <div>
+            <label>Oră sfârșit</label
+            ><input type="time" id="ms-end" value="20:00" />
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>Ore lucrate</label
+            ><input
+              type="number"
+              id="ms-hours"
+              value="12"
+              min="0"
+              max="24"
+              step=".5"
+            />
+          </div>
+          <div>
+            <label>Status prezență</label>
+            <select id="ms-status" onchange="onMsStatusChange()">
+              <option value="prezent">Prezent</option>
+              <option value="co">CO — Concediu odihnă</option>
+              <option value="cm">CM — Concediu medical</option>
+              <option value="delegare">DEL — Delegare</option>
+              <option value="invoire">INV — Învoire</option>
+              <option value="tura_nep">TN — Tură neplanificată</option>
+              <option value="tura_rec">TR — Tură recuperare</option>
+              <option value="altele">Altele</option>
+            </select>
+          </div>
+        </div>
+        <div id="ms-alt-row" style="display: none">
+          <label>Specificați</label
+          ><input type="text" id="ms-alt" placeholder="Descriere..." />
+        </div>
+        <label>Serviciu</label>
+        <select id="ms-serviciu">
+          <option value="">— fără serviciu —</option>
+          <option value="Coordonator (ST)">Coordonator (ST)</option>
+          <option value="Intervenție (Int.)">Intervenție (Int.)</option>
+          <option value="Ofițer de serviciu (OS)">
+            Ofițer de serviciu (OS)
+          </option>
+          <option value="Acces (P)">Acces (P)</option>
+          <option value="Rutieră (Rut.)">Rutieră (Rut.)</option>
+          <option value="Patrulă (Auto)">Patrulă (Auto)</option>
+          <option value="Cooperare (S7)">Cooperare (S7)</option>
+          <option value="Cooperare (OP)">Cooperare (OP)</option>
+          <option value="Altele">Altele</option>
+        </select>
+        <div id="ms-srv-alt-row" style="display: none">
+          <label>Specificați serviciul</label
+          ><input
+            type="text"
+            id="ms-srv-alt"
+            placeholder="Descriere serviciu..."
+          />
+        </div>
+        <label>Observații</label><textarea id="ms-notes" rows="2"></textarea>
+        <div id="ms-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-shift')">Anulează</button>
+          <button class="btn btn-ok" onclick="saveShift()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER SHIFT (edit own) -->
+    <div class="mo" id="mo-ushift">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl" id="mo-usttl">Editează tura mea</div>
+          <button class="mx" onclick="closeMo('mo-ushift')">✕</button>
+        </div>
+        <div class="ibox" style="margin-top: 0">
+          Poți modifica statusul și observațiile.
+        </div>
+        <div
+          id="us-info"
+          style="margin-bottom: 0.75rem; font-size: 0.83rem; color: var(--mut)"
+        ></div>
+        <label>Status prezență</label>
+        <select id="us-status" onchange="onUsStatusChange()">
+          <option value="prezent">Prezent</option>
+          <option value="co">CO — Concediu odihnă</option>
+          <option value="cm">CM — Concediu medical</option>
+          <option value="delegare">DEL — Delegare</option>
+          <option value="invoire">INV — Învoire</option>
+          <option value="tura_nep">TN — Tură neplanificată</option>
+          <option value="tura_rec">TR — Tură recuperare</option>
+          <option value="altele">Altele</option>
+        </select>
+        <div id="us-alt-row" style="display: none">
+          <label>Specificați</label
+          ><input type="text" id="us-alt" placeholder="Descriere..." />
+        </div>
+        <label>Observații</label><textarea id="us-notes" rows="3"></textarea>
+        <div id="us-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-ushift')">Anulează</button
+          ><button class="btn btn-ok" onclick="saveUShift()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RĂSPÂNDIRI -->
+    <div class="mo" id="mo-rasp">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl" id="mo-rttl">Adaugă răspândire</div>
+          <button class="mx" onclick="closeMo('mo-rasp')">✕</button>
+        </div>
+        <div class="ibox" style="margin-top: 0">
+          Perioadele de CO, CM, invoiri nu intră în normă — norma se
+          recalculează pentru zilele efectiv lucrate.
+        </div>
+        <label>Lucrător</label
+        ><select id="rm-worker"></select>
+        <label>Tip răspândire</label>
+        <select id="rm-type" onchange="onRmTypeChange()">
+          <option value="co">CO — Concediu odihnă</option>
+          <option value="cm">CM — Concediu medical</option>
+          <option value="delegare">DEL — Delegare</option>
+          <option value="invoire">INV — Învoire</option>
+          <option value="tura_nep">
+            TN — Tură neplanificată (ore supl. luna curentă)
+          </option>
+          <option value="tura_rec">
+            TR — Tură recuperare (ore reportate luna prec.)
+          </option>
+        </select>
+        <div class="fr">
+          <div>
+            <label>Data început</label><input type="date" id="rm-from" />
+          </div>
+          <div><label>Data sfârșit</label><input type="date" id="rm-to" /></div>
+        </div>
+        <div id="rm-ore-row" style="display: none">
+          <label>Nr. ore recuperate</label
+          ><input
+            type="number"
+            id="rm-ore"
+            min="0"
+            max="200"
+            placeholder="ore"
+          />
+        </div>
+        <label>Observații</label><textarea id="rm-notes" rows="2"></textarea>
+        <div id="rm-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-rasp')">Anulează</button
+          ><button class="btn btn-ok" onclick="saveRasp()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NORMA OVERRIDE -->
+    <div class="mo" id="mo-norma">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl">Editează normă</div>
+          <button class="mx" onclick="closeMo('mo-norma')">✕</button>
+        </div>
+        <div class="ibox" style="margin-top: 0">
+          Normă = 8h × zile lucrătoare, exclus weekenduri, sărbători și
+          perioadele de CO/CM/invoiri.
+        </div>
+        <div class="fr">
+          <div>
+            <label>Lucrător</label
+            ><select id="nm-w"></select>
+          </div>
+          <div>
+            <label>Lună</label
+            ><select id="nm-m"></select>
+          </div>
+        </div>
+        <div class="fr">
+          <div>
+            <label>An</label
+            ><select id="nm-y"></select>
+          </div>
+          <div>
+            <label>Zile lucrătoare (override)</label
+            ><input
+              type="number"
+              id="nm-days"
+              min="0"
+              max="31"
+              placeholder="Auto"
+            />
+          </div>
+        </div>
+        <div
+          id="nm-info"
+          style="font-size: 0.78rem; color: var(--mut); margin-top: 0.5rem"
+        ></div>
+        <div id="nm-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-norma')">Anulează</button>
+          <button class="btn btn-wrn" onclick="clearNorma()">Reset auto</button>
+          <button class="btn btn-ok" onclick="saveNorma()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOLIDAY -->
+    <div class="mo" id="mo-hol">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mttl">Adaugă sărbătoare</div>
+          <button class="mx" onclick="closeMo('mo-hol')">✕</button>
+        </div>
+        <label>Data *</label><input type="date" id="hm-date" />
+        <label>Denumire *</label
+        ><input
+          type="text"
+          id="hm-name"
+          placeholder="Vinerea Mare, Zi liberă..."
+        />
+        <label>Se repetă anual</label>
+        <select id="hm-rec">
+          <option value="false">Nu</option>
+          <option value="true">Da</option>
+        </select>
+        <div id="hm-msg" class="amsg"></div>
+        <div class="fa">
+          <button class="btn" onclick="closeMo('mo-hol')">Anulează</button
+          ><button class="btn btn-ok" onclick="saveHol()">Salvează</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ JAVASCRIPT ══ -->
+    <script>
+      const MRO = [
+        "Ianuarie",
+        "Februarie",
+        "Martie",
+        "Aprilie",
+        "Mai",
+        "Iunie",
+        "Iulie",
+        "August",
+        "Septembrie",
+        "Octombrie",
+        "Noiembrie",
+        "Decembrie",
+      ];
+      const STA_LABEL = {
+        prezent: "Prezent",
+        co: "CO",
+        cm: "CM",
+        delegare: "DEL",
+        invoire: "INV",
+        tura_nep: "TN",
+        tura_rec: "TR",
+        altele: "Altele",
+      };
+      const STA_LABEL_FULL = {
+        prezent: "Prezent",
+        co: "Concediu odihnă",
+        cm: "Concediu medical",
+        delegare: "Delegare",
+        invoire: "Învoire",
+        tura_nep: "Tură neplanificată",
+        tura_rec: "Tură recuperare",
+        altele: "Altele",
+      };
+      const STA_BADGE = {
+        prezent: "b-ok",
+        co: "b-co",
+        cm: "b-cm",
+        delegare: "b-del",
+        invoire: "b-inv",
+        tura_nep: "b-tnp",
+        tura_rec: "b-trec",
+        altele: "b-sdsl",
+      };
+      const ZERO_ORE = ["tura_nep", "tura_rec"];
+      const EXCL_NORMA = ["co", "cm", "invoire"];
+      const LIBER_STA = [
+        "co",
+        "cm",
+        "delegare",
+        "invoire",
+        "tura_nep",
+        "tura_rec",
+      ];
+
+      /* ── SĂRBĂTORI ── */
+      const FIX_HOL = {
+        "01-01": "Anul Nou",
+        "01-02": "Anul Nou",
+        "01-06": "Boboteaza",
+        "01-07": "Sf. Ion",
+        "05-01": "Ziua Muncii",
+        "06-01": "Ziua Copilului",
+        "08-15": "Sf. Maria",
+        "11-30": "Sf. Andrei",
+        "12-01": "Ziua Națională",
+        "12-25": "Crăciun",
+        "12-26": "Crăciun",
+      };
+      function orthodoxEaster(y) {
+        const a = y % 4,
+          b = y % 7,
+          c = y % 19,
+          d = (19 * c + 15) % 30,
+          e = (2 * a + 4 * b - d + 34) % 7;
+        const mo = Math.floor((d + e + 114) / 31),
+          dy = ((d + e + 114) % 31) + 1;
+        const jul = new Date(y, mo - 1, dy);
+        jul.setDate(jul.getDate() + 13);
+        return jul;
+      }
+      function mobileHols(y) {
+        const e = orthodoxEaster(y);
+        const f = (d) =>
+          `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const add = (d, n) => {
+          const r = new Date(d);
+          r.setDate(r.getDate() + n);
+          return r;
+        };
+        return {
+          [f(add(e, -2))]: "Vinerea Mare",
+          [f(e)]: "Paști",
+          [f(add(e, 1))]: "Paști",
+          [f(add(e, 48))]: "Înălțarea Domnului",
+          [f(add(e, 49))]: "Rusalii",
+          [f(add(e, 50))]: "Rusalii",
+        };
+      }
+      let customHols = [];
+      function getHols(y) {
+        const base = { ...FIX_HOL, ...mobileHols(y) };
+        customHols.forEach((h) => {
+          if (h.recurring || parseInt(h.year) === y) {
+            const k = h.date.substring(5);
+            if (!base[k]) base[k] = h.name;
+          }
+        });
+        return base;
+      }
+      function isHol(ds) {
+        const d = new Date(ds + "T12:00:00");
+        const k = `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return getHols(d.getFullYear())[k] || null;
+      }
+      function isWE(ds) {
+        const d = new Date(ds + "T12:00:00"),
+          w = d.getDay();
+        return w === 0 || w === 6;
+      }
+      function isSdsl(ds) {
+        return isWE(ds) || !!isHol(ds);
+      }
+
+      /* Ore S.D.S.L. corecte pentru tură noapte pe 2 zile
+   onlyForDate: dacă e furnizat, calculează SDSL doar pentru acea zi calendaristică
+   (util când tura traversează granița de lună și vrem să contabilizăm SDSL
+   doar pe luna în care cade efectiv ziua respectivă) */
+      function calcSdslOre(shift, onlyForDate) {
+        if (!shift || shift.status === "absent") return 0;
+        const totalH = parseFloat(shift.hours) || 0;
+        if (totalH === 0) return 0;
+        if (shift.shift_type === "noapte") {
+          const startDs = shift.date;
+          const endDs = nextDay(startDs);
+          const { hOnStart, hOnEnd } = splitNightShift(shift);
+          let sdsl = 0;
+          if (onlyForDate) {
+            if (onlyForDate === startDs && isSdsl(startDs)) sdsl += hOnStart;
+            if (onlyForDate === endDs && isSdsl(endDs)) sdsl += hOnEnd;
+          } else {
+            if (isSdsl(startDs)) sdsl += hOnStart;
+            if (isSdsl(endDs)) sdsl += hOnEnd;
+          }
+          return Math.min(sdsl, totalH);
+        }
+        return isSdsl(shift.date) ? totalH : 0;
+      }
+
+      /* Calculează split-ul corect al orelor pentru o tură de noapte pe 2 zile.
+   Returnează {hOnStart, hOnEnd} pe baza start_time, end_time și hours reale.
+   Ex: 20:00-08:00 / 12h  => hOnStart=4,  hOnEnd=8
+       18:00-06:00 / 12h  => hOnStart=6,  hOnEnd=6
+       22:00-06:00 /  8h  => hOnStart=2,  hOnEnd=6  */
+      function splitNightShift(shift) {
+        const totalH = parseFloat(shift.hours) || 12;
+        const startH = parseFloat((shift.start_time || "20:00").split(":")[0]);
+        // Ore de la startH până la miezul nopții (ziua de start)
+        const hOnStart = Math.min(24 - startH, totalH);
+        // Restul intră pe ziua de end
+        const hOnEnd = Math.max(0, totalH - hOnStart);
+        return { hOnStart, hOnEnd };
+      }
+
+      function nextDay(ds) {
+        const d = new Date(ds + "T12:00:00");
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10);
+      }
+      function prevDay(ds) {
+        const d = new Date(ds + "T12:00:00");
+        d.setDate(d.getDate() - 1);
+        return d.toISOString().slice(0, 10);
+      }
+      function fmtDate(ds) {
+        if (!ds) return "—";
+        const [y, m, d] = ds.split("-");
+        return `${d}-${m}-${y}`;
+      }
+      function fmtTime(t) {
+        return t || "—";
+      }
+      function todayStr() {
+        const t = new Date();
+        return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+      }
+
+      function getWorkingDays(y, m, raspList = []) {
+        const total = new Date(y, m, 0).getDate();
+        const hols = getHols(y);
+        // Exclude date din răspândiri CO/CM/invoiri
+        const exclDates = new Set();
+        raspList
+          .filter((r) => EXCL_NORMA.includes(r.type))
+          .forEach((r) => {
+            let d = new Date(r.date_from + "T12:00:00");
+            const end = new Date(r.date_to + "T12:00:00");
+            while (d <= end) {
+              const ds = d.toISOString().slice(0, 10);
+              const dw = d.getDay();
+              if (dw !== 0 && dw !== 6) {
+                const k = `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                if (!hols[k]) exclDates.add(ds);
+              }
+              d.setDate(d.getDate() + 1);
+            }
+          });
+        let count = 0;
+        for (let d = 1; d <= total; d++) {
+          const dt = new Date(y, m - 1, d);
+          const dw = dt.getDay();
+          const k = `${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const ds = `${y}-${k}`;
+          if (dw !== 0 && dw !== 6 && !hols[k] && !exclDates.has(ds)) count++;
+        }
+        return count;
+      }
+
+      /* ── GLOBALS ── */
+      let sb,
+        CU,
+        CP,
+        calDate = new Date();
+      let allWorkers = [],
+        allShifts = [],
+        allRasp = [],
+        normaOv = {},
+        customHolsDb = [];
+      let editWId = null,
+        editSId = null,
+        editUSId = null,
+        progDateContext = null,
+        progExistingShifts = [];
+
+      /* ── INIT ── */
+      window.addEventListener("DOMContentLoaded", async () => {
+        sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const {
+          data: { session },
+        } = await sb.auth.getSession();
+        if (session) await initApp(session.user);
+      });
+
+      /* ── AUTH ── */
+      function showReg() {
+        document.getElementById("auth-login").style.display = "none";
+        document.getElementById("auth-reg").style.display = "block";
+      }
+      function showLogin() {
+        document.getElementById("auth-reg").style.display = "none";
+        document.getElementById("auth-login").style.display = "block";
+      }
+      async function doLogin() {
+        const msg = document.getElementById("li-msg");
+        msg.className = "amsg";
+        msg.textContent = "...";
+        const { data, error } = await sb.auth.signInWithPassword({
+          email: document.getElementById("li-email").value.trim(),
+          password: document.getElementById("li-pass").value,
+        });
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        await initApp(data.user);
+      }
+      async function doRegister() {
+        const name = document.getElementById("rg-name").value.trim();
+        const email = document.getElementById("rg-email").value.trim();
+        const pass = document.getElementById("rg-pass").value;
+        const msg = document.getElementById("rg-msg");
+        if (!name || !email || !pass) {
+          msg.className = "amsg err";
+          msg.textContent = "Completează toate câmpurile.";
+          return;
+        }
+        if (pass.length < 6) {
+          msg.className = "amsg err";
+          msg.textContent = "Parola trebuie să aibă minim 6 caractere.";
+          return;
+        }
+        msg.className = "amsg";
+        msg.textContent = "Se creează contul...";
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password: pass,
+          options: { data: { full_name: name } },
+        });
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        // Dacă sesiunea e activă imediat (email confirm dezactivat în Supabase), initializăm direct
+        if (data.session && data.user) {
+          // Triggerul SQL creează automat profilul și workerul
+          // Dacă triggerul nu e activ, creăm manual workerul
+          const { data: existing } = await sb
+            .from("workers")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+          if (!existing) {
+            await sb
+              .from("workers")
+              .insert([
+                {
+                  name,
+                  email,
+                  role: "user",
+                  status: "activ",
+                  daily_norm: 8,
+                  user_id: data.user.id,
+                  order_nr: 99,
+                },
+              ])
+              .select();
+          }
+          await initApp(data.user);
+          return;
+        }
+        // Cu email confirm activat
+        msg.className = "amsg ok";
+        msg.textContent =
+          "Cont creat! Verifică emailul pentru confirmare, apoi autentifică-te.";
+      }
+      async function doLogout() {
+        await sb.auth.signOut();
+        document.getElementById("app-screen").style.display = "none";
+        document.getElementById("auth-screen").style.display = "flex";
+      }
+
+      async function initApp(user) {
+        CU = user;
+        // Asteapta pana profilul e creat (triggerul poate intarzia)
+        let prof = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const { data } = await sb
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (data) {
+            prof = data;
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 800));
+        }
+        if (!prof) {
+          // Creaza profil manual daca triggerul nu a rulat
+          const nm = user.user_metadata?.full_name || user.email;
+          await sb
+            .from("profiles")
+            .upsert(
+              { id: user.id, full_name: nm, role: "user" },
+              { onConflict: "id" },
+            );
+          prof = { role: "user", full_name: nm };
+        }
+        CP = prof;
+        // Leaga worker dupa email daca nu e deja legat
+        const { data: ew } = await sb
+          .from("workers")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!ew) {
+          const { data: we } = await sb
+            .from("workers")
+            .select("id")
+            .eq("email", user.email)
+            .maybeSingle();
+          if (we)
+            await sb
+              .from("workers")
+              .update({ user_id: user.id })
+              .eq("id", we.id);
+          else {
+            // Workerul nu exista deloc - il cream (fallback daca triggerul nu a rulat)
+            const nm =
+              user.user_metadata?.full_name || user.email.split("@")[0];
+            await sb
+              .from("workers")
+              .insert([
+                {
+                  name: nm,
+                  email: user.email,
+                  role: "user",
+                  status: "activ",
+                  daily_norm: 8,
+                  user_id: user.id,
+                  order_nr: 99,
+                },
+              ]);
+          }
+        }
+        document.getElementById("u-name").textContent =
+          CP.full_name || user.email;
+        const rb = document.getElementById("u-role");
+        rb.textContent = CP.role === "admin" ? "ADMIN" : "USER";
+        rb.className = "brole " + (CP.role === "admin" ? "adm" : "usr");
+        document
+          .querySelectorAll(".adm-only")
+          .forEach(
+            (el) => (el.style.display = CP.role === "admin" ? "block" : "none"),
+          );
+        document.getElementById("auth-screen").style.display = "none";
+        document.getElementById("app-screen").style.display = "flex";
+        document.getElementById("app-screen").style.flexDirection = "column";
+        populateDateSelects();
+        await loadCustomHols();
+        await loadWorkers();
+        await loadNormaOv();
+        await loadShiftsForCal();
+        await loadRaspAll();
+        renderCalendar();
+        populateWorkerSel("sit-w");
+        if (CP.role !== "admin") {
+          const my = allWorkers.find((w) => w.user_id === CU.id);
+          if (my) {
+            document.getElementById("sit-w").value = my.id;
+            loadSituatie();
+          }
+        }
+      }
+
+      /* ── LOADERS ── */
+      async function loadWorkers() {
+        const { data } = await sb
+          .from("workers")
+          .select("*")
+          .order("order_nr", { nullsFirst: false })
+          .order("name");
+        allWorkers = data || [];
+      }
+      async function loadNormaOv() {
+        const { data } = await sb.from("norma_override").select("*");
+        normaOv = {};
+        (data || []).forEach((r) => {
+          normaOv[`${r.worker_id}_${r.year}_${r.month}`] = r.working_days;
+        });
+      }
+      async function loadCustomHols() {
+        const { data } = await sb
+          .from("custom_holidays")
+          .select("*")
+          .order("date");
+        customHolsDb = data || [];
+        customHols = customHolsDb;
+      }
+      async function loadRaspAll() {
+        const { data } = await sb.from("raspandiri").select("*");
+        allRasp = data || [];
+      }
+
+      async function loadShiftsForCal() {
+        const y = calDate.getFullYear(),
+          m = calDate.getMonth();
+        const prev = prevDay(`${y}-${String(m + 1).padStart(2, "0")}-01`);
+        const last = new Date(y, m + 1, 0).getDate();
+        const to = `${y}-${String(m + 1).padStart(2, "0")}-${last}`;
+        const { data } = await sb
+          .from("shifts")
+          .select("*, workers(name,order_nr)")
+          .gte("date", prev)
+          .lte("date", to);
+        allShifts = data || [];
+      }
+
+      /* ── CALENDAR ── */
+      function calNav(dir) {
+        if (dir === 0) calDate = new Date();
+        else calDate.setMonth(calDate.getMonth() + dir);
+        loadShiftsForCal().then(renderCalendar);
+      }
+
+      function renderCalendar() {
+        const y = calDate.getFullYear(),
+          m = calDate.getMonth();
+        document.getElementById("cal-title").textContent = `${MRO[m]} ${y}`;
+        const hols = getHols(y);
+        const grid = document.getElementById("cal-grid");
+        grid.innerHTML = "";
+        ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].forEach((d, i) => {
+          const el = document.createElement("div");
+          el.className = "cal-dow" + (i >= 5 ? " we" : "");
+          el.textContent = d;
+          grid.appendChild(el);
+        });
+        const fd = new Date(y, m, 1).getDay();
+        const off = fd === 0 ? 6 : fd - 1;
+        for (let i = 0; i < off; i++) {
+          const el = document.createElement("div");
+          el.className = "cal-day empty";
+          grid.appendChild(el);
+        }
+        const days = new Date(y, m + 1, 0).getDate();
+        const today = todayStr();
+        for (let d = 1; d <= days; d++) {
+          const ds = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const dayShifts = allShifts.filter((s) => s.date === ds);
+          const prevDs = prevDay(ds);
+          const nightEnd = allShifts.filter(
+            (s) => s.date === prevDs && s.shift_type === "noapte",
+          );
+          // Răspândiri active pe această zi
+          const dayRasp = allRasp.filter((r) => {
+            return ds >= r.date_from && ds <= r.date_to;
+          });
+          const hKey = `${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hName = hols[hKey];
+          const dt = new Date(y, m, d);
+          const we = dt.getDay() === 0 || dt.getDay() === 6;
+          const el = document.createElement("div");
+          el.className = "cal-day" + (hName ? " hday" : we ? " wknd" : "");
+          if (ds === today) el.classList.add("today");
+          const dn = document.createElement("div");
+          dn.className = "dn" + (hName ? " hday" : we ? " wknd" : "");
+          dn.textContent = d;
+          el.appendChild(dn);
+          if (hName) {
+            const hn = document.createElement("div");
+            hn.className = "hname";
+            hn.textContent = hName;
+            el.appendChild(hn);
+          }
+          // Night end pills
+          if (nightEnd.length) {
+            const p = document.createElement("div");
+            p.className = "spill sp-ne";
+            p.innerHTML = `◀🌙 ${nightEnd.length}`;
+            el.appendChild(p);
+            const b = document.createElement("div");
+            b.className = "nbar end";
+            el.appendChild(b);
+          }
+          // Grouped shifts
+          const grp = {};
+          dayShifts.forEach((s) => {
+            if (!grp[s.shift_type]) grp[s.shift_type] = [];
+            grp[s.shift_type].push(s);
+          });
+          Object.entries(grp).forEach(([type, arr]) => {
+            const p = document.createElement("div");
+            p.className =
+              "spill " +
+              (type === "zi" ? "sp-d" : type === "noapte" ? "sp-n" : "sp-c");
+            const icon = type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
+            const hasSdsl = arr.some((s) => calcSdslOre(s) > 0);
+            p.innerHTML = `${icon} ${arr.length}${hasSdsl ? '<span class="sdsl-tag">S</span>' : ""}`;
+            el.appendChild(p);
+            if (type === "noapte") {
+              const b = document.createElement("div");
+              b.className = "nbar";
+              el.appendChild(b);
+            }
+          });
+          // Răspândiri summary
+          if (dayRasp.length) {
+            const types = [...new Set(dayRasp.map((r) => r.type))];
+            types.forEach((t) => {
+              const cnt = dayRasp.filter((r) => r.type === t).length;
+              const p = document.createElement("div");
+              p.className = "spill sp-lib";
+              p.textContent = `${STA_LABEL[t] || t}: ${cnt}`;
+              el.appendChild(p);
+            });
+          }
+          if (
+            dayShifts.length > 0 ||
+            nightEnd.length > 0 ||
+            dayRasp.length > 0
+          ) {
+            el.onclick = () => openDayDetail(ds, dayShifts, nightEnd, dayRasp);
+          } else if (CP?.role === "admin") {
+            el.onclick = () => {
+              document.getElementById("pm-date").value = ds;
+              openProgModal(ds);
+            };
+          }
+          grid.appendChild(el);
+        }
+      }
+
+      /* ── DAY DETAIL MODAL ── */
+      function openDayDetail(ds, shifts, nightEnd, rasp) {
+        const d = new Date(ds + "T12:00:00");
+        const hN = isHol(ds);
+        const we = isWE(ds);
+        let title = `${d.getDate()} ${MRO[d.getMonth()]} ${d.getFullYear()}`;
+        if (hN) title += ` — ${hN}`;
+        else if (we) title += " — Weekend";
+        document.getElementById("mo-detail-title").textContent = title;
+        const sdsl = isSdsl(ds);
+        let html = sdsl
+          ? `<div class="sdsl-alert">⚠ Zi S.D.S.L. — orele vor fi evidențiate distinct</div>`
+          : "";
+
+        const renderGrp = (ttl, arr, isEnd = false) => {
+          if (!arr.length) return "";
+          let s = `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">${ttl}</div>`;
+          s += `<table class="stbl"><thead><tr><th>Lucrător</th><th>Interval</th><th>Ore</th><th>S.D.S.L.</th><th>Serviciu</th><th>Status</th><th>Note</th></tr></thead><tbody>`;
+          arr.forEach((sh) => {
+            const st = sh.status || "prezent";
+            const stLbl = STA_LABEL[st] || st;
+            const stCls = STA_BADGE[st] || "b-ok";
+            const sdslOre = calcSdslOre(sh);
+            const sdslCell =
+              sdslOre > 0
+                ? `<span class="badge b-sdsl">${sdslOre}h</span>`
+                : "—";
+            const interval = isEnd
+              ? `${sh.start_time || "20:00"} → 08:00 (+1)`
+              : `${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)}`;
+            const srv = sh.serviciu
+              ? `<span style="font-size:.72rem;color:var(--mut)">${sh.serviciu}</span>`
+              : "—";
+            const isOwn =
+              allWorkers.find((w) => w.id === sh.worker_id)?.user_id === CU?.id;
+            const editFn =
+              CP?.role === "admin"
+                ? `editShift('${sh.id}')`
+                : `openUShift('${sh.id}')`;
+            const editBtn =
+              CP?.role === "admin" || isOwn
+                ? `<button class="btn btn-xs" onclick="closeMo('mo-detail');${editFn}" style="margin-left:3px">✎</button>`
+                : "";
+            s += `<tr><td>${sh.workers?.name || "—"}${editBtn}</td><td style="white-space:nowrap">${interval}</td><td>${sh.hours || "—"}</td><td>${sdslCell}</td><td>${srv}</td><td><span class="badge ${stCls}">${stLbl}</span></td><td style="color:var(--mut);font-size:.75rem">${sh.notes || ""}</td></tr>`;
+          });
+          s += `</tbody></table>`;
+          return s;
+        };
+
+        if (nightEnd.length)
+          html += renderGrp("◀ 🌙 Tură noapte (continuare)", nightEnd, true);
+        html += renderGrp(
+          "☀ Tură Zi",
+          shifts.filter((s) => s.shift_type === "zi"),
+        );
+        html += renderGrp(
+          "▶ 🌙 Tură Noapte (start)",
+          shifts.filter((s) => s.shift_type === "noapte"),
+        );
+        html += renderGrp(
+          "⚡ Tură Specială",
+          shifts.filter((s) => s.shift_type === "custom"),
+        );
+
+        // Răspândiri
+        if (rasp.length) {
+          html += `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Răspândiri / Libere</div>`;
+          html += `<table class="stbl"><thead><tr><th>Lucrător</th><th>Tip</th><th>Perioadă</th><th>Note</th></tr></thead><tbody>`;
+          rasp.forEach((r) => {
+            const wname =
+              allWorkers.find((w) => w.id === r.worker_id)?.name || "—";
+            html += `<tr><td>${wname}</td><td><span class="badge ${STA_BADGE[r.type] || "b-ok"}">${STA_LABEL[r.type] || r.type}</span></td><td style="white-space:nowrap">${fmtDate(r.date_from)} → ${fmtDate(r.date_to)}</td><td style="color:var(--mut);font-size:.75rem">${r.notes || ""}</td></tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+
+        document.getElementById("mo-detail-body").innerHTML =
+          html ||
+          '<div style="color:var(--mut);padding:1rem">Nicio activitate înregistrată.</div>';
+        const acts = document.getElementById("mo-detail-acts");
+        if (CP?.role === "admin") {
+          acts.innerHTML = `<button class="btn btn-sm btn-ok" onclick="closeMo('mo-detail');document.getElementById('pm-date').value='${ds}';openProgModal('${ds}')">+ Program</button>
+    <button class="btn btn-sm" onclick="closeMo('mo-detail');openShiftModal()">+ Tură individuală</button>`;
+        } else acts.innerHTML = "";
+        openMo("mo-detail");
+      }
+
+      /* ── SITUAȚIE PERSONALĂ ── */
+      function populateDateSelects() {
+        const now = new Date();
+        [
+          "sit-m",
+          "prez-m",
+          "prog-m",
+          "tura-m",
+          "srv-m",
+          "rap-m",
+          "nm-m",
+        ].forEach((id) => {
+          const s = document.getElementById(id);
+          if (!s) return;
+          s.innerHTML = "";
+          MRO.forEach((n, i) => {
+            const o = document.createElement("option");
+            o.value = i + 1;
+            o.textContent = n;
+            if (i === now.getMonth()) o.selected = true;
+            s.appendChild(o);
+          });
+        });
+        [
+          "sit-y",
+          "prez-y",
+          "prog-y",
+          "tura-y",
+          "srv-y",
+          "rap-y",
+          "nm-y",
+        ].forEach((id) => {
+          const s = document.getElementById(id);
+          if (!s) return;
+          s.innerHTML = "";
+          for (let y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
+            const o = document.createElement("option");
+            o.value = y;
+            o.textContent = y;
+            if (y === now.getFullYear()) o.selected = true;
+            s.appendChild(o);
+          }
+        });
+        // Ture - zi
+        const sd = document.getElementById("tura-d");
+        if (sd) {
+          sd.innerHTML = '<option value="">— Ziua —</option>';
+          for (let d = 1; d <= 31; d++) {
+            const o = document.createElement("option");
+            o.value = d;
+            o.textContent = String(d).padStart(2, "0");
+            sd.appendChild(o);
+          }
+        }
+      }
+
+      function populateWorkerSel(id, inclAll = false) {
+        const s = document.getElementById(id);
+        if (!s) return;
+        const prev = s.value;
+        s.innerHTML = inclAll
+          ? '<option value="">Toți lucrătorii</option>'
+          : '<option value="">— Selectează —</option>';
+        allWorkers
+          .filter((w) => w.status === "activ" || !w.status)
+          .sort(
+            (a, b) =>
+              (a.order_nr || 99) - (b.order_nr || 99) ||
+              a.name.localeCompare(b.name),
+          )
+          .forEach((w) => {
+            const o = document.createElement("option");
+            o.value = w.id;
+            o.textContent = w.name;
+            s.appendChild(o);
+          });
+        if (prev) s.value = prev;
+      }
+
+      async function loadSituatie() {
+        const wid = document.getElementById("sit-w").value;
+        const month = parseInt(document.getElementById("sit-m").value);
+        const year = parseInt(document.getElementById("sit-y").value);
+        if (!wid) {
+          document.getElementById("sit-content").innerHTML =
+            '<div class="empty-state">Selectează lucrătorul</div>';
+          return;
+        }
+        const worker = allWorkers.find((w) => w.id === wid);
+        if (!worker) return;
+        if (CP.role !== "admin") {
+          const my = allWorkers.find((w) => w.user_id === CU.id);
+          if (!my || my.id !== wid) {
+            document.getElementById("sit-content").innerHTML =
+              '<div class="empty-state" style="color:var(--err)">Acces restricționat</div>';
+            return;
+          }
+        }
+        document.getElementById("sit-content").innerHTML =
+          '<div class="empty-state"><div class="spinner"></div></div>';
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const last = new Date(year, month, 0).getDate();
+        const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
+
+        // Incarcam si ultima zi din luna precedenta pentru tura noapte care trece luna
+        const prevMonthLastDay = prevDay(from);
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*")
+          .eq("worker_id", wid)
+          .gte("date", from)
+          .lte("date", to);
+        // Tura noapte din ultima zi a lunii precedente (ex. 30 apr → 1 mai)
+        const { data: nightCarry } = await sb
+          .from("shifts")
+          .select("*")
+          .eq("worker_id", wid)
+          .eq("date", prevMonthLastDay)
+          .eq("shift_type", "noapte");
+
+        const { data: rasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .eq("worker_id", wid);
+        const monthRasp = (rasp || []).filter(
+          (r) => r.date_from <= to && r.date_to >= from,
+        );
+
+        // Calcul ore reportate din luna precedenta
+        // Luna precedenta: shifts + norma
+        let oreReportate = 0;
+        const prevM = month === 1 ? 12 : month - 1;
+        const prevY = month === 1 ? year - 1 : year;
+        const prevFrom = `${prevY}-${String(prevM).padStart(2, "0")}-01`;
+        const prevLast = new Date(prevY, prevM, 0).getDate();
+        const prevTo = `${prevY}-${String(prevM).padStart(2, "0")}-${prevLast}`;
+        const { data: prevShifts } = await sb
+          .from("shifts")
+          .select("*")
+          .eq("worker_id", wid)
+          .gte("date", prevFrom)
+          .lte("date", prevTo);
+        const { data: prevRasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .eq("worker_id", wid);
+        const prevMonthRasp = (prevRasp || []).filter(
+          (r) => r.date_from <= prevTo && r.date_to >= prevFrom,
+        );
+        if (prevShifts && prevShifts.length > 0) {
+          // Calculeaza ore lucrate luna precedenta
+          let prevOre = 0;
+          prevShifts.forEach((s) => {
+            if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+            let h = parseFloat(s.hours) || 0;
+            // Tura noapte care trece in luna curenta: doar orele din luna prec
+            if (s.shift_type === "noapte") {
+              const endDs = nextDay(s.date);
+              if (endDs >= from) {
+                // trece in luna curenta - calculeaza ore pe luna prec
+                const { hOnStart } = splitNightShift(s);
+                h = hOnStart;
+              }
+            }
+            prevOre += h;
+          });
+          const prevNorm = getWorkerNorm(worker, prevY, prevM, prevMonthRasp);
+          const prevSupl = prevOre - prevNorm;
+          if (prevSupl > 0) oreReportate = prevSupl;
+        }
+
+        renderSituatie(
+          worker,
+          shifts || [],
+          nightCarry || [],
+          monthRasp,
+          year,
+          month,
+          oreReportate,
+        );
+      }
+
+      function getWorkerNorm(w, y, m, raspList = []) {
+        const key = `${w.id}_${y}_${m}`;
+        if (normaOv[key] !== undefined)
+          return (w.daily_norm || 8) * normaOv[key];
+        return (w.daily_norm || 8) * getWorkingDays(y, m, raspList);
+      }
+
+      function renderSituatie(
+        worker,
+        shifts,
+        nightCarry,
+        rasp,
+        year,
+        month,
+        oreReportate = 0,
+      ) {
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const norm = getWorkerNorm(worker, year, month, rasp);
+        const wd = getWorkingDays(year, month, rasp);
+        const nKey = `${worker.id}_${year}_${month}`;
+        const nZile = normaOv[nKey] !== undefined ? normaOv[nKey] : wd;
+        let oreZi = 0,
+          oreNoapte = 0,
+          oreCustom = 0,
+          oreSdsl = 0,
+          tureZi = 0,
+          tureNoapte = 0;
+
+        shifts.forEach((s) => {
+          if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+          let h = parseFloat(s.hours) || 0;
+          // Cerinta 1: tura noapte care trece in luna urmatoare - doar orele din luna curenta
+          if (s.shift_type === "noapte") {
+            const endDs = nextDay(s.date);
+            const endMonth = parseInt(endDs.substring(5, 7));
+            const endYear = parseInt(endDs.substring(0, 4));
+            if (endMonth !== month || endYear !== year) {
+              // Tura trece in luna urm: calculam ore pe luna curenta (de la start pana la miezul noptii)
+              const { hOnStart } = splitNightShift(s);
+              h = hOnStart;
+              // SDSL doar pentru ziua de start (ziua apartinand lunii curente)
+              oreSdsl += calcSdslOre(s, s.date);
+            } else {
+              oreSdsl += calcSdslOre(s);
+            }
+            oreNoapte += h;
+            tureNoapte++;
+          } else if (s.shift_type === "zi") {
+            oreZi += h;
+            tureZi++;
+            oreSdsl += calcSdslOre(s);
+          } else {
+            oreCustom += h;
+            oreSdsl += calcSdslOre(s);
+          }
+        });
+
+        // Cerinta 1: tura noapte din luna precedenta care se termina in prima zi a lunii curente
+        // Adaugam orele care "intra" in luna curenta (de la miezul noptii pana la sfarsit)
+        (nightCarry || []).forEach((s) => {
+          if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+          const endDs = nextDay(s.date);
+          // Verifica ca se termina in prima zi a lunii curente
+          if (endDs !== from) return;
+          const { hOnEnd } = splitNightShift(s); // ore pe luna curenta (dupa miezul noptii)
+          if (hOnEnd > 0) {
+            oreNoapte += hOnEnd;
+            // Nu numaram ca tura separata, e continuare
+            // SDSL pentru orele din luna curenta
+            if (isSdsl(endDs)) oreSdsl += hOnEnd;
+          }
+        });
+
+        const total = oreZi + oreNoapte + oreCustom;
+        // Cerinta 2: total cu ore reportate din luna precedenta
+        const totalCuReportate = total + oreReportate;
+        const oreSupl = totalCuReportate - norm;
+        const co = rasp.filter((r) => r.type === "co").length;
+        const cm = rasp.filter((r) => r.type === "cm").length;
+        const del = rasp.filter((r) => r.type === "delegare").length;
+        const inv = rasp.filter((r) => r.type === "invoire").length;
+        const maxSdsl = norm * 0.4;
+        const sdslPct = maxSdsl ? Math.round((oreSdsl / maxSdsl) * 100) : 0;
+
+        let html = `
+  <div style="font-size:.95rem;font-weight:600;margin-bottom:.65rem">${worker.name} <span style="font-size:.78rem;color:var(--mut);font-weight:400">— ${MRO[month - 1]} ${year}</span></div>
+  ${oreReportate > 0 ? `<div class="sdsl-alert" style="background:#2ea04322;border-color:var(--ok);color:var(--ok);margin-bottom:.65rem">▶ Ore suplimentare reportate din luna precedentă: <strong>+${oreReportate}h</strong></div>` : ""}
+  <div class="stats-g">
+    <div class="sc"><div class="sc-v">${total}</div><div class="sc-l">Ore lucrate</div></div>
+    ${oreReportate > 0 ? `<div class="sc"><div class="sc-v" style="color:var(--ok)">+${oreReportate}</div><div class="sc-l">Reportate luna prec.</div></div>` : ""}
+    <div class="sc"><div class="sc-v" style="color:var(--wrn)">${oreSdsl}</div><div class="sc-l">Ore S.D.S.L.</div></div>
+    <div class="sc"><div class="sc-v">${norm}</div><div class="sc-l">Normă (${nZile}z×${worker.daily_norm || 8}h)</div></div>
+    <div class="sc"><div class="sc-v" style="color:${oreSupl >= 0 ? "var(--ok)" : "var(--err)"}">${oreSupl >= 0 ? "+" : ""}${Math.round(oreSupl * 10) / 10}</div><div class="sc-l">Ore suplimentare</div></div>
+    <div class="sc"><div class="sc-v">${tureZi}</div><div class="sc-l">Ture zi</div></div>
+    <div class="sc"><div class="sc-v">${tureNoapte}</div><div class="sc-l">Ture noapte</div></div>
+    <div class="sc"><div class="sc-v">${co}</div><div class="sc-l">CO</div></div>
+    <div class="sc"><div class="sc-v">${cm}</div><div class="sc-l">CM</div></div>
+  </div>
+  <div style="margin-bottom:.75rem">
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px"><span>Normă: ${total}/${norm}h</span><span>${norm ? Math.round((total / norm) * 100) : 0}%</span></div>
+    <div class="pb"><div class="pf ${total > norm ? "over" : ""}" style="width:${norm ? Math.min((total / norm) * 100, 100) : 0}%"></div></div>
+  </div>
+  <div style="margin-bottom:.75rem">
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px"><span>S.D.S.L.: ${oreSdsl}/${Math.round(maxSdsl)}h max (40%)</span><span style="color:${sdslPct > 100 ? "var(--err)" : sdslPct > 80 ? "var(--wrn)" : "var(--mut)"}">${sdslPct}%</span></div>
+    <div class="pb"><div class="pf ${sdslPct > 100 ? "over" : sdslPct > 80 ? "warn" : ""}" style="width:${Math.min(sdslPct, 100)}%"></div></div>
+    ${sdslPct > 100 ? `<div class="sdsl-alert" style="margin-top:.4rem">⚠ Depășire max. ore S.D.S.L.! (${oreSdsl}h > ${Math.round(maxSdsl)}h)</div>` : ""}
+  </div>`;
+
+        if (CP.role === "admin")
+          html += `<div style="margin-bottom:.75rem"><button class="btn btn-sm btn-wrn" onclick="openNormaModal('${worker.id}',${year},${month})">✎ Editează normă</button></div>`;
+
+        // Mini calendar
+        const fd = new Date(year, month - 1, 1).getDay();
+        const off = fd === 0 ? 6 : fd - 1;
+        const totalDays = new Date(year, month, 0).getDate();
+        const today2 = todayStr();
+        const hols = getHols(year);
+        const shMap = {};
+        shifts.forEach((s) => {
+          shMap[s.date] = s;
+        });
+
+        html += `<hr class="dvd"><div style="font-size:.82rem;font-weight:600;margin-bottom:.65rem">Calendar ${MRO[month - 1]} ${year}</div>`;
+        html += `<div class="wc-grid">`;
+        ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].forEach((d) => {
+          html += `<div class="cal-dow" style="font-size:.68rem;padding:.3rem 0">${d}</div>`;
+        });
+        for (let i = 0; i < off; i++) html += `<div class="wcd empty"></div>`;
+        for (let d = 1; d <= totalDays; d++) {
+          const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const sh = shMap[ds];
+          const prevDs = prevDay(ds);
+          const shP = shMap[prevDs];
+          const hasNE = shP && shP.shift_type === "noapte";
+          const isToday = ds === today2;
+          const hK = `${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hN = hols[hK];
+          const dt2 = new Date(year, month - 1, d);
+          const we2 = dt2.getDay() === 0 || dt2.getDay() === 6;
+          const ncls = hN ? "wcn hd" : we2 ? "wcn wk" : "wcn";
+          // Răspândiri pe această zi
+          const dRasp = rasp.filter(
+            (r) => ds >= r.date_from && ds <= r.date_to,
+          );
+          html += `<div class="wcd ${isToday ? "today" : ""} ${hN ? "hday" : we2 ? "wknd" : ""}">`;
+          html += `<div class="${ncls}">${d}</div>`;
+          if (hasNE) {
+            html += `<div class="wc-ne">◀NOA</div>`;
+            if (
+              calcSdslOre({ ...shP, shift_type: "noapte", date: prevDs }) > 0 &&
+              isSdsl(ds)
+            )
+              html += `<div class="wc-sdsl">S</div>`;
+            html += `<div class="wc-nbar end"></div>`;
+          }
+          if (sh) {
+            const cls =
+              ZERO_ORE.includes(sh.status) || LIBER_STA.includes(sh.status)
+                ? "wc-sp"
+                : sh.shift_type === "zi"
+                  ? "wc-d"
+                  : "wc-n";
+            // Cerinta 4: prescurtari corecte din STA_LABEL
+            const lbl =
+              sh.status === "absent"
+                ? "ABS"
+                : STA_LABEL[sh.status] ||
+                  (sh.shift_type === "zi" ? "ZI" : "▶N");
+            html += `<div class="${cls}">${lbl}</div>`;
+            if (sh.hours && !ZERO_ORE.includes(sh.status))
+              html += `<div style="font-size:.58rem;color:var(--mut)">${sh.hours}h</div>`;
+            const sdslO = calcSdslOre(sh);
+            if (sdslO > 0) html += `<div class="wc-sdsl">S.D.S.L</div>`;
+            if (sh.shift_type === "noapte")
+              html += `<div class="wc-nbar"></div>`;
+            const isOwn =
+              allWorkers.find((w) => w.id === sh.worker_id)?.user_id === CU?.id;
+            if (isOwn || CP.role === "admin") {
+              const fn =
+                CP.role === "admin"
+                  ? `editShift('${sh.id}')`
+                  : `openUShift('${sh.id}')`;
+              html += `<div onclick="${fn}" style="font-size:.52rem;color:var(--acc);cursor:pointer">✎</div>`;
+            }
+          }
+          if (dRasp.length) {
+            html += `<div class="wc-lib">${STA_LABEL[dRasp[0].type] || dRasp[0].type}</div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`;
+
+        // Răspândiri list - adaugam si tura carry noapte info
+        if (nightCarry && nightCarry.length > 0) {
+          // Info despre tura noapte care s-a terminat in prima zi a lunii
+          const from2 = `${year}-${String(month).padStart(2, "0")}-01`;
+          const nc = nightCarry.filter((s) => nextDay(s.date) === from2);
+          if (nc.length > 0) {
+            html += `<div class="sdsl-alert" style="background:#6e3bb511;border-color:var(--ngt);color:#b794f4;margin-bottom:.65rem">
+        🌙 Tură de noapte din luna precedentă care se termină în prima zi a lunii curente:<br>
+        ${nc
+          .map((s) => {
+            const { hOnStart, hOnEnd } = splitNightShift(s);
+            return `<strong>${hOnStart}h</strong> pe luna precedentă + <strong>${hOnEnd}h</strong> pe luna curentă`;
+          })
+          .join(", ")}
+      </div>`;
+          }
+        }
+
+        // Răspândiri list
+        if (rasp.length) {
+          html += `<hr class="dvd"><div style="font-size:.82rem;font-weight:600;margin-bottom:.65rem">Răspândiri</div>
+    <div class="tw"><table class="stbl"><thead><tr><th>Tip</th><th>De la</th><th>Până la</th><th>Note</th><th></th></tr></thead><tbody>`;
+          rasp.forEach((r) => {
+            html += `<tr><td><span class="badge ${STA_BADGE[r.type] || "b-ok"}">${STA_LABEL[r.type] || r.type}</span></td><td>${fmtDate(r.date_from)}</td><td>${fmtDate(r.date_to)}</td><td style="color:var(--mut);font-size:.75rem">${r.notes || ""}</td><td>${CP.role === "admin" ? `<button class="btn btn-xs btn-err" onclick="deleteRasp('${r.id}')">✕</button>` : ""}</td></tr>`;
+          });
+          html += `</tbody></table></div>`;
+        }
+
+        // Ture detaliu
+        if (shifts.length) {
+          html += `<hr class="dvd"><div style="font-size:.82rem;font-weight:600;margin-bottom:.65rem">Detaliu ture</div>
+    <div class="tw"><table class="stbl"><thead><tr><th>Data</th><th>Tip</th><th>Interval</th><th>Ore</th><th>S.D.S.L.</th><th>Serviciu</th><th>Status</th><th>Note</th></tr></thead><tbody>`;
+          shifts
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .forEach((sh) => {
+              const d2 = new Date(sh.date + "T12:00:00");
+              const st = sh.status || "prezent";
+              const isNight = sh.shift_type === "noapte";
+              const int2 = isNight
+                ? `${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)} <span style="font-size:.7rem;color:var(--ngt)">(+1)</span>`
+                : `${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)}`;
+              // Daca tura noapte trece in luna urmatoare, SDSL se calculeaza doar pt ziua din luna curenta
+              let sdslO;
+              if (isNight) {
+                const endDs = nextDay(sh.date);
+                const endMonth = parseInt(endDs.substring(5, 7));
+                const endYear = parseInt(endDs.substring(0, 4));
+                sdslO =
+                  endMonth !== month || endYear !== year
+                    ? calcSdslOre(sh, sh.date)
+                    : calcSdslOre(sh);
+              } else {
+                sdslO = calcSdslOre(sh);
+              }
+              const sdslCell =
+                sdslO > 0 ? `<span class="badge b-sdsl">${sdslO}h</span>` : "—";
+              const hN2 = isHol(sh.date),
+                we3 = isWE(sh.date);
+              const dm = hN2
+                ? ` <span style="color:#f85149;font-size:.68rem">🎄</span>`
+                : we3
+                  ? ` <span style="color:#e3b341;font-size:.68rem">WE</span>`
+                  : "";
+              const isOwn =
+                allWorkers.find((w) => w.id === sh.worker_id)?.user_id ===
+                CU?.id;
+              const eb =
+                CP.role === "admin"
+                  ? `<button class="btn btn-xs" onclick="editShift('${sh.id}')">✎</button>`
+                  : isOwn
+                    ? `<button class="btn btn-xs" onclick="openUShift('${sh.id}')">✎</button>`
+                    : "";
+              html += `<tr><td>${d2.getDate()} ${MRO[d2.getMonth()]}${dm}</td><td>${sh.shift_type === "zi" ? "☀" : sh.shift_type === "noapte" ? "▶🌙" : "⚡"}</td><td style="white-space:nowrap">${int2}</td><td>${ZERO_ORE.includes(sh.status) ? "0" : sh.hours || "—"}</td><td>${sdslCell}</td><td style="font-size:.75rem;color:var(--mut)">${sh.serviciu || "—"}</td><td><span class="badge ${STA_BADGE[st] || "b-ok"}">${STA_LABEL[st] || st}</span></td><td style="color:var(--mut);font-size:.75rem">${sh.notes || ""} ${eb}</td></tr>`;
+            });
+          html += `</tbody></table></div>`;
+        }
+        document.getElementById("sit-content").innerHTML = html;
+      }
+
+      /* ── PREZENȚĂ TURĂ ── */
+      async function loadPrezenta() {
+        const month = parseInt(document.getElementById("prez-m").value);
+        const year = parseInt(document.getElementById("prez-y").value);
+        document.getElementById("prez-content").innerHTML =
+          '<div class="empty-state"><div class="spinner"></div></div>';
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const last = new Date(year, month, 0).getDate();
+        const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*,workers(name,order_nr,grad)")
+          .gte("date", from)
+          .lte("date", to);
+        const { data: rasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .gte("date_to", from)
+          .lte("date_from", to);
+        const hols = getHols(year);
+        const days = new Date(year, month, 0).getDate();
+        let html = `<div style="font-size:.85rem;font-weight:600;margin-bottom:.75rem">Prezență completă tură — ${MRO[month - 1]} ${year}</div>`;
+        html += `<div class="srv-tbl-wrap"><table class="srv-tbl"><thead><tr><th class="name-col">Lucrător</th>`;
+        for (let d = 1; d <= days; d++) {
+          const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hK = `${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hN = hols[hK];
+          const dt = new Date(year, month - 1, d);
+          const we = dt.getDay() === 0 || dt.getDay() === 6;
+          html += `<th style="${hN ? "color:#f85149" : we ? "color:#e3b341" : ""}">${d}<br><span style="font-size:.6rem">${"LuMaMiJoViSâDu".substring(((dt.getDay() + 6) % 7) * 2, ((dt.getDay() + 6) % 7) * 2 + 2)}</span></th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        allWorkers
+          .filter((w) => w.status === "activ" || !w.status)
+          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .forEach((w) => {
+            html += `<tr><td class="name-col">${w.name}<br><span style="font-size:.65rem;color:var(--mut)">${w.grad || ""}</span></td>`;
+            for (let d = 1; d <= days; d++) {
+              const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+              const sh = (shifts || []).find(
+                (s) => s.worker_id === w.id && s.date === ds,
+              );
+              const nightEnd = (shifts || []).find(
+                (s) =>
+                  s.worker_id === w.id &&
+                  s.date === prevDay(ds) &&
+                  s.shift_type === "noapte",
+              );
+              const rp = (rasp || []).find(
+                (r) =>
+                  r.worker_id === w.id && ds >= r.date_from && ds <= r.date_to,
+              );
+              let cell = "",
+                cls = "";
+              if (sh) {
+                const st = sh.status || "prezent";
+                if (sh.shift_type === "zi") {
+                  cell = "Z";
+                  cls = "srv-cell-d";
+                } else if (sh.shift_type === "noapte") {
+                  cell = "N";
+                  cls = "srv-cell-n";
+                } else {
+                  cell = "S";
+                  cls = "srv-cell-n";
+                }
+                // Cerinta 4: prescurtari corecte
+                if (LIBER_STA.includes(st)) {
+                  cell = STA_LABEL[st] || st;
+                  cls = "srv-cell-lib";
+                }
+              } else if (nightEnd) {
+                cell = "◀N";
+                cls = "srv-cell-n";
+              } else if (rp) {
+                cell = STA_LABEL[rp.type] || rp.type;
+                cls = `srv-cell-${rp.type === "co" ? "co" : rp.type === "cm" ? "cm" : rp.type === "delegare" ? "del" : rp.type === "invoire" ? "inv" : "lib"}`;
+              }
+              html += `<td class="${cls}" title="${sh ? STA_LABEL_FULL[sh.status || "prezent"] + " " + (sh.serviciu || "") : rp ? STA_LABEL_FULL[rp.type] || rp.type : ""}">${cell}</td>`;
+            }
+            html += `</tr>`;
+          });
+        html += `</tbody></table></div>`;
+        html += `<div class="legend" style="margin-top:.65rem">
+    <div class="li"><div class="ld srv-cell-d" style="border:1px solid var(--day)"></div>Zi (Z)</div>
+    <div class="li"><div class="ld srv-cell-n" style="border:1px solid var(--ngt)"></div>Noapte (N)</div>
+    <div class="li"><div class="ld srv-cell-lib" style="border:1px solid var(--wrn)"></div>Liber/CO</div>
+    <div class="li"><div class="ld srv-cell-cm" style="border:1px solid var(--day)"></div>C.M.</div>
+    <div class="li"><div class="ld srv-cell-del" style="border:1px solid #9333ea"></div>Delegare</div>
+  </div>`;
+        document.getElementById("prez-content").innerHTML = html;
+      }
+
+      /* ── PANEL: PERSONAL ── */
+      async function loadPersonalPanel() {
+        const tbody = document.getElementById("workers-tbody");
+        tbody.innerHTML =
+          '<tr><td colspan="7" class="empty-state"><div class="spinner"></div></td></tr>';
+        await loadWorkers();
+        populateWorkerSel("sit-w");
+        populateWorkerSel("ms-worker");
+        populateWorkerSel("rm-worker");
+        populateWorkerSel("nm-w");
+        if (!allWorkers.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="empty-state">Niciun lucrător</td></tr>';
+          return;
+        }
+        tbody.innerHTML = allWorkers
+          .map(
+            (w) => `<tr>
+    <td>${w.order_nr || "—"}</td>
+    <td><strong>${w.name}</strong></td>
+    <td style="color:var(--mut)">${w.grad || "—"}</td>
+    <td><span class="badge ${w.role === "admin" ? "b-sdsl" : "b-ok"}">${w.role || "user"}</span></td>
+    <td><span class="badge ${w.status === "activ" || !w.status ? "b-ok" : "b-err"}">${w.status || "activ"}</span></td>
+    <td style="color:var(--mut);font-size:.78rem">${w.user_id ? '<span style="color:var(--ok)">✓ Legat</span>' : w.email || "—"}</td>
+    <td><button class="btn btn-xs" onclick="openWorkerModal('${w.id}')">✎</button> <button class="btn btn-xs btn-err" onclick="deleteWorker('${w.id}')">✕</button></td>
+  </tr>`,
+          )
+          .join("");
+      }
+
+      function openWorkerModal(id = null) {
+        editWId = id || null;
+        document.getElementById("mo-wttl").textContent = id
+          ? "Editează lucrător"
+          : "Adaugă lucrător";
+        document.getElementById("wm-msg").textContent = "";
+        if (id) {
+          const w = allWorkers.find((x) => x.id === id);
+          if (w) {
+            document.getElementById("wm-nr").value = w.order_nr || "";
+            document.getElementById("wm-name").value = w.name || "";
+            document.getElementById("wm-grad").value = w.grad || "";
+            document.getElementById("wm-role").value = w.role || "user";
+            document.getElementById("wm-norm").value = w.daily_norm || 8;
+            document.getElementById("wm-status").value = w.status || "activ";
+            document.getElementById("wm-email").value = w.email || "";
+          }
+        } else {
+          ["wm-nr", "wm-name", "wm-grad", "wm-email"].forEach(
+            (i) => (document.getElementById(i).value = ""),
+          );
+          document.getElementById("wm-role").value = "user";
+          document.getElementById("wm-status").value = "activ";
+          document.getElementById("wm-norm").value = "8";
+        }
+        openMo("mo-worker");
+      }
+      async function saveWorker() {
+        const name = document.getElementById("wm-name").value.trim();
+        const msg = document.getElementById("wm-msg");
+        if (!name) {
+          msg.className = "amsg err";
+          msg.textContent = "Numele este obligatoriu.";
+          return;
+        }
+        const payload = {
+          name,
+          email: document.getElementById("wm-email").value.trim() || null,
+          grad: document.getElementById("wm-grad").value.trim() || null,
+          role: document.getElementById("wm-role").value,
+          status: document.getElementById("wm-status").value,
+          daily_norm: parseInt(document.getElementById("wm-norm").value) || 8,
+          order_nr: parseInt(document.getElementById("wm-nr").value) || null,
+        };
+        let error;
+        if (editWId) {
+          ({ error } = await sb
+            .from("workers")
+            .update(payload)
+            .eq("id", editWId));
+        } else {
+          ({ error } = await sb.from("workers").insert([payload]));
+        }
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        closeMo("mo-worker");
+        await loadWorkers();
+        loadPersonalPanel();
+      }
+      async function deleteWorker(id) {
+        if (
+          !confirm(
+            "Ștergi acest lucrător? Turele și răspândirile asociate vor fi șterse.",
+          )
+        )
+          return;
+        await sb.from("shifts").delete().eq("worker_id", id);
+        await sb.from("raspandiri").delete().eq("worker_id", id);
+        await sb.from("workers").delete().eq("id", id);
+        await loadWorkers();
+        loadPersonalPanel();
+      }
+
+      /* ── PANEL: PROGRAM TURĂ ── */
+      async function loadProgram() {
+        const month = parseInt(document.getElementById("prog-m").value);
+        const year = parseInt(document.getElementById("prog-y").value);
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const last = new Date(year, month, 0).getDate();
+        const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
+        const wrap = document.getElementById("prog-cal-wrap");
+        wrap.innerHTML =
+          '<div class="empty-state"><div class="spinner"></div></div>';
+        const prevLast = prevDay(from);
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*,workers(name)")
+          .gte("date", from)
+          .lte("date", to)
+          .order("date");
+        const { data: nc } = await sb
+          .from("shifts")
+          .select("*,workers(name)")
+          .eq("date", prevLast)
+          .eq("shift_type", "noapte");
+        const hols = getHols(year);
+        const days = new Date(year, month, 0).getDate();
+        const today2 = todayStr();
+        const wd = getWorkingDays(year, month);
+        let html = `<div style="font-size:.83rem;color:var(--mut);margin-bottom:.5rem">${MRO[month - 1]} ${year} — <strong style="color:var(--txt)">${wd} zile lucrătoare</strong>, normă: <strong style="color:var(--txt)">${wd * 8}h/pers.</strong></div>`;
+        html += `<div class="cal-grid" style="margin-bottom:1rem">`;
+        ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].forEach((d, i) => {
+          html += `<div class="cal-dow${i >= 5 ? " we" : ""}">${d}</div>`;
+        });
+        const fd2 = new Date(year, month - 1, 1).getDay();
+        const off2 = fd2 === 0 ? 6 : fd2 - 1;
+        for (let i = 0; i < off2; i++)
+          html += `<div class="cal-day empty"></div>`;
+        for (let d = 1; d <= days; d++) {
+          const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const dayShifts = (shifts || []).filter((s) => s.date === ds);
+          const pd = prevDay(ds);
+          const ne =
+            d === 1
+              ? nc || []
+              : (shifts || []).filter(
+                  (s) => s.date === pd && s.shift_type === "noapte",
+                );
+          const hK = `${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hN = hols[hK];
+          const dt3 = new Date(year, month - 1, d);
+          const we = dt3.getDay() === 0 || dt3.getDay() === 6;
+          const isT = ds === today2;
+          html += `<div class="cal-day${hN ? " hday" : we ? " wknd" : ""} ${isT ? "today" : ""}" onclick="openProgModal('${ds}')" style="cursor:pointer;position:relative;overflow:hidden">`;
+          html += `<div class="dn${hN ? " hday" : we ? " wknd" : ""}">${d}</div>`;
+          if (hN) html += `<div class="hname">${hN}</div>`;
+          if (ne.length)
+            html += `<div class="spill sp-ne">◀🌙 ${ne.length}</div>`;
+          const grp2 = {};
+          dayShifts.forEach((s) => {
+            if (!grp2[s.shift_type]) grp2[s.shift_type] = [];
+            grp2[s.shift_type].push(s);
+          });
+          Object.entries(grp2).forEach(([type, arr]) => {
+            const icon = type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
+            html += `<div class="spill ${type === "zi" ? "sp-d" : type === "noapte" ? "sp-n" : "sp-c"}">${icon} ${arr.length}</div>`;
+          });
+          if (dayShifts.some((s) => s.shift_type === "noapte"))
+            html += `<div class="nbar"></div>`;
+          html += `</div>`;
+        }
+        html += `</div>`;
+        wrap.innerHTML = html;
+      }
+
+      function openProgModal(ds = null) {
+        progDateContext = ds;
+        document.getElementById("pm-msg").textContent = "";
+        document.getElementById("pm-notes").value = "";
+        document.getElementById("pm-sdsl-info").style.display = "none";
+        document.getElementById("pm-del-btn").style.display = "none";
+        progExistingShifts = [];
+        if (ds) {
+          document.getElementById("pm-date").value = ds;
+          // Verifică dacă există ture pe data respectivă (pentru buton Șterge)
+          const existing = allShifts.filter((s) => s.date === ds);
+          if (existing.length) {
+            progExistingShifts = existing;
+            document.getElementById("pm-del-btn").style.display = "inline-flex";
+          }
+        }
+        onPmChange();
+        openMo("mo-prog");
+      }
+
+      async function deleteProgShift() {
+        if (!progDateContext || !progExistingShifts.length) return;
+        if (!confirm(`Ștergi toate turele din ${fmtDate(progDateContext)}?`))
+          return;
+        for (const sh of progExistingShifts) {
+          await sb.from("shifts").delete().eq("id", sh.id);
+        }
+        closeMo("mo-prog");
+        await loadShiftsForCal();
+        renderCalendar();
+        loadProgram();
+      }
+
+      function onPmChange() {
+        const date = document.getElementById("pm-date").value;
+        const type = document.getElementById("pm-type").value;
+        if (type === "zi") {
+          document.getElementById("pm-start").value = "08:00";
+          document.getElementById("pm-end").value = "20:00";
+          document.getElementById("pm-hours").value = "12";
+        } else if (type === "noapte") {
+          document.getElementById("pm-start").value = "20:00";
+          document.getElementById("pm-end").value = "08:00";
+          document.getElementById("pm-hours").value = "12";
+        }
+        const info = document.getElementById("pm-sdsl-info");
+        if (!date) {
+          info.style.display = "none";
+          return;
+        }
+        let txt = "";
+        if (isSdsl(date)) {
+          const hN = isHol(date);
+          txt = `⚠ ${hN || "Weekend"} — orele vor fi marcate S.D.S.L.`;
+        }
+        if (type === "noapte") {
+          const nd = nextDay(date);
+          const sdsl2 = isSdsl(nd);
+          const hN2 = isHol(nd);
+          txt =
+            (txt ? txt + "<br>" : "") +
+            `🌙 ${fmtDate(date)} 20:00 → ${fmtDate(nd)} 08:00${sdsl2 ? ' <span style="color:var(--wrn)">(a doua zi: ' + (hN2 || "weekend") + ")</span>" : ""}`;
+        }
+        info.innerHTML = txt;
+        info.style.display = txt ? "block" : "none";
+      }
+
+      async function saveProgram() {
+        const date = document.getElementById("pm-date").value;
+        const msg = document.getElementById("pm-msg");
+        if (!date) {
+          msg.className = "amsg err";
+          msg.textContent = "Data este obligatorie.";
+          return;
+        }
+        msg.className = "amsg";
+        msg.textContent = "Se salvează...";
+        const active = allWorkers.filter(
+          (w) => w.status === "activ" || !w.status,
+        );
+        if (!active.length) {
+          msg.className = "amsg err";
+          msg.textContent = "Nu există lucrători activi.";
+          return;
+        }
+        const type = document.getElementById("pm-type").value;
+        const start = document.getElementById("pm-start").value || null;
+        const end = document.getElementById("pm-end").value || null;
+        const hours =
+          parseFloat(document.getElementById("pm-hours").value) || null;
+        const status = document.getElementById("pm-status").value;
+        const notes = document.getElementById("pm-notes").value || null;
+        const { data: ex } = await sb
+          .from("shifts")
+          .select("worker_id")
+          .eq("date", date);
+        const exIds = new Set((ex || []).map((e) => e.worker_id));
+        const toIns = active
+          .filter((w) => !exIds.has(w.id))
+          .map((w) => ({
+            worker_id: w.id,
+            date,
+            shift_type: type,
+            start_time: start,
+            end_time: end,
+            hours,
+            status,
+            notes,
+            created_by: CU.id,
+          }));
+        if (!toIns.length) {
+          msg.className = "amsg err";
+          msg.textContent = "Toți lucrătorii au deja tură în această zi.";
+          return;
+        }
+        const { error } = await sb.from("shifts").insert(toIns);
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        msg.className = "amsg ok";
+        msg.textContent = `Salvat pentru ${toIns.length} lucrători!`;
+        setTimeout(async () => {
+          closeMo("mo-prog");
+          await loadShiftsForCal();
+          renderCalendar();
+          loadProgram();
+        }, 900);
+      }
+
+      /* ── TURE INDIVIDUALE ── */
+      function onTuraYMChange() {
+        const y = parseInt(document.getElementById("tura-y").value);
+        const m = parseInt(document.getElementById("tura-m").value);
+        const dSel = document.getElementById("tura-d");
+        const last = new Date(y, m, 0).getDate();
+        dSel.innerHTML = '<option value="">— Ziua —</option>';
+        for (let d = 1; d <= last; d++) {
+          const o = document.createElement("option");
+          o.value = d;
+          o.textContent = String(d).padStart(2, "0");
+          dSel.appendChild(o);
+        }
+      }
+
+      async function loadTureZi() {
+        const y = parseInt(document.getElementById("tura-y").value);
+        const m = parseInt(document.getElementById("tura-m").value);
+        const d = parseInt(document.getElementById("tura-d").value);
+        if (!d) {
+          document.getElementById("ture-content").innerHTML =
+            '<div class="empty-state">Selectează ziua</div>';
+          return;
+        }
+        const ds = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        document.getElementById("ture-content").innerHTML =
+          '<div class="empty-state"><div class="spinner"></div></div>';
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*,workers(name,order_nr)")
+          .eq("date", ds)
+          .order("worker_id");
+        const nightEnd = allShifts.filter(
+          (s) => s.date === prevDay(ds) && s.shift_type === "noapte",
+        );
+        const hN = isHol(ds);
+        const we = isWE(ds);
+        const sdsl = isSdsl(ds);
+        const { data: rasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .lte("date_from", ds)
+          .gte("date_to", ds);
+
+        let html = `<div style="font-size:.9rem;font-weight:600;margin-bottom:.65rem">`;
+        html += `${String(d).padStart(2, "0")}-${String(m).padStart(2, "0")}-${y}`;
+        if (hN) html += ` — <span style="color:#f85149">${hN}</span>`;
+        else if (we) html += ` — <span style="color:#e3b341">Weekend</span>`;
+        html += `</div>`;
+        if (sdsl)
+          html += `<div class="sdsl-alert" style="margin-bottom:.65rem">⚠ Zi S.D.S.L.</div>`;
+
+        // Tabel lucrători activi cu situația lor
+        const activeW = allWorkers
+          .filter((w) => w.status === "activ" || !w.status)
+          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99));
+        html += `<div class="tw"><table class="stbl"><thead><tr><th>Nr.</th><th>Lucrător</th><th>Grad</th><th>Tip tură</th><th>Interval</th><th>Ore</th><th>S.D.S.L.</th><th>Serviciu</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>`;
+
+        activeW.forEach((w) => {
+          const sh = (shifts || []).find((s) => s.worker_id === w.id);
+          const ne = nightEnd.find((s) => s.worker_id === w.id);
+          const rp = (rasp || []).find((r) => r.worker_id === w.id);
+          const st = sh?.status || "—";
+          const sdslO = sh ? calcSdslOre(sh) : 0;
+          const tipLbl =
+            ne && !sh
+              ? "◀🌙 Noapte cont."
+              : sh
+                ? sh.shift_type === "zi"
+                  ? "☀ Zi"
+                  : sh.shift_type === "noapte"
+                    ? "▶🌙 Noapte"
+                    : "⚡ Special"
+                : "—";
+          const int3 = sh
+            ? sh.shift_type === "noapte"
+              ? `${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)} (+1)`
+              : `${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)}`
+            : ne
+              ? `${fmtTime(ne.start_time)}→08:00`
+              : "—";
+          const stBadge = sh
+            ? `<span class="badge ${STA_BADGE[st] || "b-ok"}">${STA_LABEL[st] || st}</span>`
+            : rp
+              ? `<span class="badge ${STA_BADGE[rp.type] || "b-ok"}">${STA_LABEL[rp.type] || rp.type}</span>`
+              : "—";
+          const isOwn = w.user_id === CU?.id;
+          let actBtns = "";
+          if (CP.role === "admin") {
+            actBtns = sh
+              ? `<button class="btn btn-xs" onclick="editShift('${sh.id}')">✎</button>`
+              : `<button class="btn btn-xs btn-ok" onclick="openShiftModalFor('${w.id}','${ds}')">+</button>`;
+          } else if (isOwn) {
+            actBtns = sh
+              ? `<button class="btn btn-xs" onclick="openUShift('${sh.id}')">✎</button>`
+              : "";
+          }
+          html += `<tr>
+      <td>${w.order_nr || "—"}</td>
+      <td>${w.name}</td>
+      <td style="color:var(--mut)">${w.grad || "—"}</td>
+      <td>${tipLbl}</td>
+      <td style="white-space:nowrap">${int3}</td>
+      <td>${sh && !ZERO_ORE.includes(sh.status) ? sh.hours || "—" : "0"}</td>
+      <td>${sdslO > 0 ? `<span class="badge b-sdsl">${sdslO}h</span>` : "—"}</td>
+      <td style="font-size:.75rem">${sh?.serviciu || "—"}</td>
+      <td>${stBadge}</td>
+      <td style="color:var(--mut);font-size:.75rem">${sh?.notes || rp?.notes || ""}</td>
+      <td>${actBtns}</td>
+    </tr>`;
+        });
+        html += `</tbody></table></div>`;
+        document.getElementById("ture-content").innerHTML = html;
+      }
+
+      /* ── SHIFT MODAL ── */
+      function openShiftModal() {
+        editSId = null;
+        document.getElementById("mo-sttl").textContent =
+          "Adaugă tură individuală";
+        document.getElementById("ms-msg").textContent = "";
+        document.getElementById("ms-sdsl-info").style.display = "none";
+        document.getElementById("ms-night-info").style.display = "none";
+        document.getElementById("ms-alt-row").style.display = "none";
+        document.getElementById("ms-srv-alt-row").style.display = "none";
+        populateWorkerSel("ms-worker");
+        document.getElementById("ms-type").value = "zi";
+        document.getElementById("ms-start").value = "08:00";
+        document.getElementById("ms-end").value = "20:00";
+        document.getElementById("ms-status").value = "prezent";
+        document.getElementById("ms-hours").value = "12";
+        document.getElementById("ms-serviciu").value = "";
+        document.getElementById("ms-notes").value = "";
+        document.getElementById("ms-alt").value = "";
+        const t = new Date();
+        document.getElementById("ms-date").value =
+          `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+        onMsChange();
+        openMo("mo-shift");
+      }
+      function openShiftModalFor(wid, ds) {
+        openShiftModal();
+        setTimeout(() => {
+          document.getElementById("ms-worker").value = wid;
+          document.getElementById("ms-date").value = ds;
+          onMsChange();
+        }, 60);
+      }
+      function editShift(id) {
+        editSId = id;
+        sb.from("shifts")
+          .select("*")
+          .eq("id", id)
+          .single()
+          .then(({ data: sh }) => {
+            if (!sh) return;
+            document.getElementById("mo-sttl").textContent = "Editează tură";
+            document.getElementById("ms-msg").textContent = "";
+            populateWorkerSel("ms-worker");
+            setTimeout(() => {
+              document.getElementById("ms-worker").value = sh.worker_id || "";
+              document.getElementById("ms-date").value = sh.date || "";
+              document.getElementById("ms-type").value = sh.shift_type || "zi";
+              document.getElementById("ms-start").value = sh.start_time || "";
+              document.getElementById("ms-end").value = sh.end_time || "";
+              document.getElementById("ms-status").value =
+                sh.status || "prezent";
+              document.getElementById("ms-hours").value = sh.hours || "";
+              document.getElementById("ms-notes").value = sh.notes || "";
+              const srv = sh.serviciu || "";
+              const srvOpts = [
+                "",
+                "Coordonator (ST)",
+                "Intervenție (Int.)",
+                "Ofițer de serviciu (OS)",
+                "Acces (P)",
+                "Rutieră (Rut.)",
+                "Patrulă (Auto)",
+                "Cooperare (S7)",
+                "Cooperare (OP)",
+                "Altele",
+              ];
+              document.getElementById("ms-serviciu").value = srvOpts.includes(
+                srv,
+              )
+                ? srv
+                : "Altele";
+              document.getElementById("ms-srv-alt").value = srvOpts.includes(
+                srv,
+              )
+                ? ""
+                : srv;
+              document.getElementById("ms-srv-alt-row").style.display =
+                !srvOpts.includes(srv) && srv ? "block" : "none";
+              document.getElementById("ms-alt-row").style.display =
+                sh.status === "altele" ? "block" : "none";
+              document.getElementById("ms-alt").value = sh.notes_alt || "";
+              onMsChange();
+            }, 60);
+            openMo("mo-shift");
+          });
+      }
+      function onMsChange() {
+        // Apelat si la edit shift - nu suprascrie orele deja setate
+        const type = document.getElementById("ms-type").value;
+        const date = document.getElementById("ms-date").value;
+        const sdslEl = document.getElementById("ms-sdsl-info");
+        const nEl = document.getElementById("ms-night-info");
+        if (!date) {
+          sdslEl.style.display = "none";
+          nEl.style.display = "none";
+          return;
+        }
+        if (isSdsl(date)) {
+          sdslEl.textContent = `⚠ ${isHol(date) || "Weekend"} — zi S.D.S.L.`;
+          sdslEl.style.display = "block";
+        } else sdslEl.style.display = "none";
+        if (type === "noapte") {
+          const nd = nextDay(date);
+          nEl.innerHTML = `🌙 ${fmtDate(date)} 20:00 → ${fmtDate(nd)} 08:00${isSdsl(nd) ? ` <span style="color:var(--wrn)">(a doua zi: ${isHol(nd) || "weekend"})</span>` : ""}`;
+          nEl.style.display = "block";
+        } else nEl.style.display = "none";
+      }
+      function onMsTypeChange() {
+        const type = document.getElementById("ms-type").value;
+        if (type === "zi") {
+          document.getElementById("ms-start").value = "08:00";
+          document.getElementById("ms-end").value = "20:00";
+          document.getElementById("ms-hours").value = "12";
+        } else if (type === "noapte") {
+          document.getElementById("ms-start").value = "20:00";
+          document.getElementById("ms-end").value = "08:00";
+          document.getElementById("ms-hours").value = "12";
+        }
+        onMsChange();
+      }
+      function onMsStatusChange() {
+        const st = document.getElementById("ms-status").value;
+        document.getElementById("ms-alt-row").style.display =
+          st === "altele" ? "block" : "none";
+        if (ZERO_ORE.includes(st)) {
+          document.getElementById("ms-hours").value = "0";
+        } else if (st === "prezent")
+          document.getElementById("ms-hours").value = "12";
+      }
+      function onMsServiciuChange() {
+        const v = document.getElementById("ms-serviciu").value;
+        document.getElementById("ms-srv-alt-row").style.display =
+          v === "Altele" ? "block" : "none";
+      }
+      async function saveShift() {
+        const wid = document.getElementById("ms-worker").value;
+        const date = document.getElementById("ms-date").value;
+        const msg = document.getElementById("ms-msg");
+        if (!wid || !date) {
+          msg.className = "amsg err";
+          msg.textContent = "Lucrătorul și data sunt obligatorii.";
+          return;
+        }
+        const srvRaw = document.getElementById("ms-serviciu").value;
+        const serviciu =
+          srvRaw === "Altele"
+            ? document.getElementById("ms-srv-alt").value || "Altele"
+            : srvRaw || null;
+        const status = document.getElementById("ms-status").value;
+        const altNotes =
+          status === "altele"
+            ? document.getElementById("ms-alt").value || null
+            : null;
+        const payload = {
+          worker_id: wid,
+          date,
+          shift_type: document.getElementById("ms-type").value,
+          start_time: document.getElementById("ms-start").value || null,
+          end_time: document.getElementById("ms-end").value || null,
+          status,
+          hours: ZERO_ORE.includes(status)
+            ? 0
+            : parseFloat(document.getElementById("ms-hours").value) || null,
+          notes: document.getElementById("ms-notes").value || null,
+          notes_alt: altNotes,
+          serviciu,
+          created_by: CU.id,
+        };
+        let error;
+        if (editSId)
+          ({ error } = await sb
+            .from("shifts")
+            .update(payload)
+            .eq("id", editSId));
+        else ({ error } = await sb.from("shifts").insert([payload]));
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        closeMo("mo-shift");
+        await loadShiftsForCal();
+        renderCalendar();
+        if (document.getElementById("panel-ture").classList.contains("active"))
+          loadTureZi();
+        if (
+          document.getElementById("panel-program").classList.contains("active")
+        )
+          loadProgram();
+      }
+
+      /* ── USER SHIFT ── */
+      function openUShift(id) {
+        editUSId = id;
+        sb.from("shifts")
+          .select("*")
+          .eq("id", id)
+          .single()
+          .then(({ data: sh }) => {
+            if (!sh) return;
+            const d = new Date(sh.date + "T12:00:00");
+            const tl =
+              sh.shift_type === "zi"
+                ? "☀ Zi"
+                : sh.shift_type === "noapte"
+                  ? "▶🌙 Noapte"
+                  : "⚡ Special";
+            document.getElementById("mo-usttl").textContent =
+              `Tură ${d.getDate()} ${MRO[d.getMonth()]} ${d.getFullYear()}`;
+            document.getElementById("us-info").textContent =
+              `${tl} | ${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)} | ${sh.hours || "—"}h`;
+            document.getElementById("us-status").value = sh.status || "prezent";
+            document.getElementById("us-notes").value = sh.notes || "";
+            document.getElementById("us-alt").value = sh.notes_alt || "";
+            document.getElementById("us-alt-row").style.display =
+              sh.status === "altele" ? "block" : "none";
+            document.getElementById("us-msg").textContent = "";
+            openMo("mo-ushift");
+          });
+      }
+      function onUsStatusChange() {
+        const st = document.getElementById("us-status").value;
+        document.getElementById("us-alt-row").style.display =
+          st === "altele" ? "block" : "none";
+      }
+      async function saveUShift() {
+        const msg = document.getElementById("us-msg");
+        msg.className = "amsg";
+        msg.textContent = "Se salvează...";
+        const { data: sh } = await sb
+          .from("shifts")
+          .select("worker_id")
+          .eq("id", editUSId)
+          .maybeSingle();
+        if (!sh) {
+          msg.className = "amsg err";
+          msg.textContent = "Tură negăsită.";
+          return;
+        }
+        const my = allWorkers.find((w) => w.user_id === CU.id);
+        if (!my || sh.worker_id !== my.id) {
+          msg.className = "amsg err";
+          msg.textContent = "Nu ai drepturi.";
+          return;
+        }
+        const status = document.getElementById("us-status").value;
+        const payload = {
+          status,
+          notes: document.getElementById("us-notes").value || null,
+          notes_alt:
+            status === "altele"
+              ? document.getElementById("us-alt").value || null
+              : null,
+        };
+        // Daca TN sau TR, orele = 0
+        if (ZERO_ORE.includes(status)) payload.hours = 0;
+        const { error } = await sb
+          .from("shifts")
+          .update(payload)
+          .eq("id", editUSId);
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        msg.className = "amsg ok";
+        msg.textContent = "Salvat!";
+        setTimeout(async () => {
+          closeMo("mo-ushift");
+          await loadShiftsForCal();
+          renderCalendar();
+          loadSituatie();
+          if (
+            document.getElementById("panel-ture").classList.contains("active")
+          )
+            loadTureZi();
+        }, 600);
+      }
+
+      /* ── RĂSPÂNDIRI ── */
+      function openRaspModal() {
+        document.getElementById("rm-worker").innerHTML = "";
+        populateWorkerSel("rm-worker");
+        if (CP.role !== "admin") {
+          const my = allWorkers.find((w) => w.user_id === CU.id);
+          if (my) document.getElementById("rm-worker").value = my.id;
+          document.getElementById("rm-worker").disabled = true;
+        } else {
+          document.getElementById("rm-worker").disabled = false;
+          // Preselect worker-ul din sit-w dacă e setat
+          const sw = document.getElementById("sit-w").value;
+          if (sw)
+            setTimeout(() => {
+              document.getElementById("rm-worker").value = sw;
+            }, 30);
+        }
+        document.getElementById("rm-type").value = "co";
+        document.getElementById("rm-from").value = "";
+        document.getElementById("rm-to").value = "";
+        document.getElementById("rm-notes").value = "";
+        document.getElementById("rm-msg").textContent = "";
+        onRmTypeChange();
+        openMo("mo-rasp");
+      }
+      function onRmTypeChange() {
+        const t = document.getElementById("rm-type").value;
+        document.getElementById("rm-ore-row").style.display = [
+          "tura_nep",
+          "tura_rec",
+        ].includes(t)
+          ? "block"
+          : "none";
+      }
+      async function saveRasp() {
+        const wid = document.getElementById("rm-worker").value;
+        const type = document.getElementById("rm-type").value;
+        const from = document.getElementById("rm-from").value;
+        const to = document.getElementById("rm-to").value;
+        const msg = document.getElementById("rm-msg");
+        if (!wid || !from || !to) {
+          msg.className = "amsg err";
+          msg.textContent = "Lucrătorul și datele sunt obligatorii.";
+          return;
+        }
+        if (from > to) {
+          msg.className = "amsg err";
+          msg.textContent =
+            "Data de început trebuie să fie înainte de data de sfârșit.";
+          return;
+        }
+        if (CP.role !== "admin") {
+          const my = allWorkers.find((w) => w.user_id === CU.id);
+          if (!my || wid !== my.id) {
+            msg.className = "amsg err";
+            msg.textContent = "Acces restricționat.";
+            return;
+          }
+        }
+        const payload = {
+          worker_id: wid,
+          type,
+          date_from: from,
+          date_to: to,
+          notes: document.getElementById("rm-notes").value || null,
+          ore: parseFloat(document.getElementById("rm-ore").value) || null,
+          created_by: CU.id,
+        };
+        const { error } = await sb.from("raspandiri").insert([payload]);
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        await loadRaspAll();
+        closeMo("mo-rasp");
+        renderCalendar();
+        loadSituatie();
+      }
+      async function deleteRasp(id) {
+        if (!confirm("Ștergi această răspândire?")) return;
+        await sb.from("raspandiri").delete().eq("id", id);
+        await loadRaspAll();
+        renderCalendar();
+        loadSituatie();
+      }
+
+      /* ── SERVICII TAB ── */
+      async function loadServiciiTab() {
+        const month = parseInt(document.getElementById("srv-m").value);
+        const year = parseInt(document.getElementById("srv-y").value);
+        document.getElementById("srv-content").innerHTML =
+          '<div class="empty-state"><div class="spinner"></div></div>';
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const last = new Date(year, month, 0).getDate();
+        const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*")
+          .gte("date", from)
+          .lte("date", to);
+        const { data: rasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .gte("date_to", from)
+          .lte("date_from", to);
+        const hols = getHols(year);
+        const days = new Date(year, month, 0).getDate();
+        let html = `<div class="srv-tbl-wrap"><table class="srv-tbl"><thead><tr><th class="name-col">Lucrător</th>`;
+        for (let d = 1; d <= days; d++) {
+          const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hK = `${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const hN = hols[hK];
+          const dt = new Date(year, month - 1, d);
+          const we = dt.getDay() === 0 || dt.getDay() === 6;
+          html += `<th style="${hN ? "color:#f85149" : we ? "color:#e3b341" : ""}">${d}</th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        allWorkers
+          .filter((w) => w.status === "activ" || !w.status)
+          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .forEach((w) => {
+            html += `<tr><td class="name-col">${w.name}</td>`;
+            for (let d = 1; d <= days; d++) {
+              const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+              const sh = (shifts || []).find(
+                (s) => s.worker_id === w.id && s.date === ds,
+              );
+              const rp = (rasp || []).find(
+                (r) =>
+                  r.worker_id === w.id && ds >= r.date_from && ds <= r.date_to,
+              );
+              let cell = "",
+                cls = "";
+              if (sh) {
+                const st = sh.status || "prezent";
+                if (LIBER_STA.includes(st)) {
+                  cell = STA_LABEL[st] || st;
+                  cls = "srv-cell-lib";
+                } else {
+                  cell = sh.serviciu
+                    ? (sh.serviciu.split("(")[1] || sh.serviciu)
+                        .replace(")", "")
+                        .substring(0, 4)
+                    : sh.shift_type === "zi"
+                      ? "Z"
+                      : "N";
+                  cls = sh.shift_type === "zi" ? "srv-cell-d" : "srv-cell-n";
+                }
+              } else if (rp) {
+                cell = STA_LABEL[rp.type] || rp.type;
+                cls =
+                  rp.type === "co"
+                    ? "srv-cell-co"
+                    : rp.type === "cm"
+                      ? "srv-cell-cm"
+                      : rp.type === "delegare"
+                        ? "srv-cell-del"
+                        : rp.type === "invoire"
+                          ? "srv-cell-inv"
+                          : "srv-cell-lib";
+              }
+              html += `<td class="${cls}" title="${sh?.serviciu || ""}">${cell}</td>`;
+            }
+            html += `</tr>`;
+          });
+        html += `</tbody></table></div>`;
+        document.getElementById("srv-content").innerHTML = html;
+      }
+
+      /* ── SĂRBĂTORI ── */
+      async function loadSarbatoriPanel() {
+        await loadCustomHols();
+        const y = new Date().getFullYear();
+        const all = { ...FIX_HOL, ...mobileHols(y) };
+        let auto = `<div style="font-size:.85rem;font-weight:600;margin-bottom:.65rem">Sărbători standard ${y}</div><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.9rem">`;
+        Object.entries(all)
+          .sort()
+          .forEach(([k, n]) => {
+            const [mo, dy] = k.split("-");
+            auto += `<span class="badge" style="background:#1c121233;color:#f85149;border:1px solid #6e202055;font-size:.72rem">${dy}.${mo} ${n}</span>`;
+          });
+        auto += `</div>`;
+        document.getElementById("hol-auto").innerHTML = auto;
+        const tbody = document.getElementById("hol-tbody");
+        if (!customHolsDb.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="4" class="empty-state">Nicio sărbătoare adăugată manual</td></tr>';
+          return;
+        }
+        tbody.innerHTML = customHolsDb
+          .map((h) => {
+            const d = new Date(h.date + "T12:00:00");
+            return `<tr><td>${fmtDate(h.date)}</td><td>${h.name}</td><td>${h.recurring ? '<span class="badge b-ok">Anual</span>' : '<span class="badge b-cm">' + d.getFullYear() + "</span>"}</td><td><button class="btn btn-xs btn-err" onclick="deleteHol('${h.id}')">✕</button></td></tr>`;
+          })
+          .join("");
+      }
+      function openHolModal() {
+        document.getElementById("hm-date").value = "";
+        document.getElementById("hm-name").value = "";
+        document.getElementById("hm-rec").value = "false";
+        document.getElementById("hm-msg").textContent = "";
+        openMo("mo-hol");
+      }
+      async function saveHol() {
+        const date = document.getElementById("hm-date").value;
+        const name = document.getElementById("hm-name").value.trim();
+        const msg = document.getElementById("hm-msg");
+        if (!date || !name) {
+          msg.className = "amsg err";
+          msg.textContent = "Data și denumirea sunt obligatorii.";
+          return;
+        }
+        const year = new Date(date + "T12:00:00").getFullYear();
+        const { error } = await sb
+          .from("custom_holidays")
+          .insert([
+            {
+              date,
+              name,
+              recurring: document.getElementById("hm-rec").value === "true",
+              year,
+              created_by: CU.id,
+              created_by_name: CP.full_name,
+            },
+          ]);
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        await loadCustomHols();
+        closeMo("mo-hol");
+        loadSarbatoriPanel();
+        await loadShiftsForCal();
+        renderCalendar();
+      }
+      async function deleteHol(id) {
+        if (!confirm("Ștergi?")) return;
+        await sb.from("custom_holidays").delete().eq("id", id);
+        await loadCustomHols();
+        loadSarbatoriPanel();
+        await loadShiftsForCal();
+        renderCalendar();
+      }
+
+      /* ── NORMA ── */
+      function openNormaModal(wid, y, m) {
+        document.getElementById("nm-msg").textContent = "";
+        populateWorkerSel("nm-w");
+        setTimeout(() => {
+          document.getElementById("nm-w").value = wid || "";
+          document.getElementById("nm-y").value = y || new Date().getFullYear();
+          document.getElementById("nm-m").value =
+            m || new Date().getMonth() + 1;
+          updNormaInfo();
+        }, 30);
+        openMo("mo-norma");
+      }
+      function updNormaInfo() {
+        const y = parseInt(document.getElementById("nm-y").value);
+        const m = parseInt(document.getElementById("nm-m").value);
+        const wid = document.getElementById("nm-w").value;
+        if (!y || !m) return;
+        const auto = getWorkingDays(y, m);
+        const k = `${wid}_${y}_${m}`;
+        const ov = normaOv[k];
+        document.getElementById("nm-info").textContent =
+          `Auto ${MRO[m - 1]} ${y}: ${auto} zile (${auto * 8}h)${ov !== undefined ? " — Override: " + ov + " zile" : ""}`;
+        document.getElementById("nm-days").value = ov !== undefined ? ov : "";
+      }
+      document.addEventListener("change", (e) => {
+        if (["nm-w", "nm-y", "nm-m"].includes(e.target.id)) updNormaInfo();
+      });
+      async function saveNorma() {
+        const wid = document.getElementById("nm-w").value;
+        const y = parseInt(document.getElementById("nm-y").value);
+        const m = parseInt(document.getElementById("nm-m").value);
+        const days = parseInt(document.getElementById("nm-days").value);
+        const msg = document.getElementById("nm-msg");
+        if (!wid || !y || !m || isNaN(days)) {
+          msg.className = "amsg err";
+          msg.textContent = "Completează toate câmpurile.";
+          return;
+        }
+        const { error } = await sb
+          .from("norma_override")
+          .upsert(
+            { worker_id: wid, year: y, month: m, working_days: days },
+            { onConflict: "worker_id,year,month" },
+          );
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        await loadNormaOv();
+        closeMo("mo-norma");
+        loadSituatie();
+      }
+      async function clearNorma() {
+        const wid = document.getElementById("nm-w").value;
+        const y = parseInt(document.getElementById("nm-y").value);
+        const m = parseInt(document.getElementById("nm-m").value);
+        await sb
+          .from("norma_override")
+          .delete()
+          .eq("worker_id", wid)
+          .eq("year", y)
+          .eq("month", m);
+        await loadNormaOv();
+        closeMo("mo-norma");
+        loadSituatie();
+      }
+
+      async function loadRapoarte() {
+        const month = parseInt(document.getElementById("rap-m").value);
+        const year = parseInt(document.getElementById("rap-y").value);
+        const from = `${year}-${String(month).padStart(2, "0")}-01`;
+        const last = new Date(year, month, 0).getDate();
+        const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
+        document.getElementById("rap-tbody").innerHTML =
+          '<tr><td colspan="10" class="empty-state"><div class="spinner"></div></td></tr>';
+        const { data: shifts } = await sb
+          .from("shifts")
+          .select("*")
+          .gte("date", from)
+          .lte("date", to);
+        // Ture noapte din ultima zi a lunii precedente care se termina in prima zi a lunii curente
+        const prevLastDay = prevDay(from);
+        const { data: nightCarryAll } = await sb
+          .from("shifts")
+          .select("*")
+          .eq("date", prevLastDay)
+          .eq("shift_type", "noapte");
+        const { data: rasp } = await sb
+          .from("raspandiri")
+          .select("*")
+          .gte("date_to", from)
+          .lte("date_from", to);
+        // Date generale
+        const wdFull = getWorkingDays(year, month);
+        const normFull = 8 * wdFull;
+        const maxSdslFull = normFull * 0.4;
+        const activeW = allWorkers.filter(
+          (w) => w.status === "activ" || !w.status,
+        );
+        document.getElementById("rap-gen").innerHTML = `
+  <div style="font-size:.88rem;font-weight:600;margin-bottom:.65rem">Date generale — ${MRO[month - 1]} ${year}</div>
+  <div class="stats-g">
+    <div class="sc"><div class="sc-v">${activeW.length}</div><div class="sc-l">Efectiv lucrători</div></div>
+    <div class="sc"><div class="sc-v">${wdFull}</div><div class="sc-l">Zile lucrătoare</div></div>
+    <div class="sc"><div class="sc-v">${normFull}</div><div class="sc-l">Normă lunară/pers.</div></div>
+    <div class="sc"><div class="sc-v" style="color:var(--wrn)">${Math.round(maxSdslFull)}</div><div class="sc-l">Max. ore S.D.S.L. (40%)</div></div>
+  </div>`;
+
+        const byW = {};
+        activeW.forEach((w) => {
+          byW[w.id] = {
+            worker: w,
+            oreZi: 0,
+            oreNoapte: 0,
+            oreC: 0,
+            sdsl: 0,
+            tureZi: 0,
+            tureNoapte: 0,
+          };
+        });
+
+        (shifts || []).forEach((sh) => {
+          if (!byW[sh.worker_id]) return;
+          if (ZERO_ORE.includes(sh.status) || sh.status === "absent") return;
+          let h = parseFloat(sh.hours) || 0;
+          // Cerinta 1: tura noapte care trece in luna urmatoare
+          if (sh.shift_type === "noapte") {
+            const endDs = nextDay(sh.date);
+            const endMonth = parseInt(endDs.substring(5, 7));
+            const endYear = parseInt(endDs.substring(0, 4));
+            if (endMonth !== month || endYear !== year) {
+              const { hOnStart } = splitNightShift(sh);
+              h = hOnStart;
+              // SDSL doar pentru ziua de start (luna curenta)
+              byW[sh.worker_id].sdsl += calcSdslOre(sh, sh.date);
+            } else {
+              byW[sh.worker_id].sdsl += calcSdslOre(sh);
+            }
+            byW[sh.worker_id].oreNoapte += h;
+            byW[sh.worker_id].tureNoapte++;
+          } else if (sh.shift_type === "zi") {
+            byW[sh.worker_id].oreZi += h;
+            byW[sh.worker_id].tureZi++;
+            byW[sh.worker_id].sdsl += calcSdslOre(sh);
+          } else {
+            byW[sh.worker_id].oreC += h;
+            byW[sh.worker_id].sdsl += calcSdslOre(sh);
+          }
+        });
+
+        // Cerinta 1: adauga ore din tura noapte care a inceput in luna precedenta
+        (nightCarryAll || []).forEach((sh) => {
+          if (!byW[sh.worker_id]) return;
+          if (ZERO_ORE.includes(sh.status) || sh.status === "absent") return;
+          const endDs = nextDay(sh.date);
+          if (endDs !== from) return;
+          const { hOnEnd } = splitNightShift(sh); // ore pe luna curenta
+          if (hOnEnd > 0) {
+            byW[sh.worker_id].oreNoapte += hOnEnd;
+            if (isSdsl(endDs)) byW[sh.worker_id].sdsl += hOnEnd;
+          }
+        });
+
+        let totalSdslAlert = false;
+        const rows = activeW
+          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .map((w) => {
+            const wRasp = (rasp || []).filter((r) => r.worker_id === w.id);
+            const norm = getWorkerNorm(w, year, month, wRasp);
+            const d = byW[w.id];
+            const total =
+              (d?.oreZi || 0) + (d?.oreNoapte || 0) + (d?.oreC || 0);
+            const supl = total - norm;
+            const sdslH = d?.sdsl || 0;
+            const maxS = norm * 0.4;
+            const pct = norm ? Math.min((total / norm) * 100, 100) : 0;
+            if (sdslH > maxS) totalSdslAlert = true;
+            return `<tr>
+      <td>${w.order_nr || "—"}</td>
+      <td><strong>${w.name}</strong></td>
+      <td style="color:var(--mut)">${w.grad || "—"}</td>
+      <td>${d?.tureZi || 0}</td>
+      <td>${d?.tureNoapte || 0}</td>
+      <td><strong>${total}</strong></td>
+      <td><span class="badge ${sdslH > maxS ? "b-err" : sdslH > maxS * 0.8 ? "b-co" : "b-sdsl"}">${sdslH}h / max ${Math.round(maxS)}h</span></td>
+      <td>${norm}</td>
+      <td style="color:${supl >= 0 ? "var(--ok)" : "var(--err)"}">${supl >= 0 ? "+" : ""}${Math.round(supl * 10) / 10}</td>
+      <td style="min-width:90px"><div class="pb"><div class="pf ${total > norm ? "over" : ""}" style="width:${pct}%"></div></div><div style="font-size:.68rem;color:var(--mut);margin-top:2px">${Math.round(pct)}%</div></td>
+    </tr>`;
+          });
+        document.getElementById("rap-tbody").innerHTML = rows.join("");
+        document.getElementById("rap-sdsl-alert").innerHTML = totalSdslAlert
+          ? `<div class="sdsl-alert">⚠ Atenție! Unul sau mai mulți lucrători au depășit numărul maxim de ore S.D.S.L. permise (40% din normă).</div>`
+          : "";
+      }
+
+      /* ── PANEL SWITCH ── */
+      function switchPanel(name) {
+        document
+          .querySelectorAll(".panel")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-tab")
+          .forEach((t) => t.classList.remove("active"));
+        document.getElementById("panel-" + name)?.classList.add("active");
+        document.querySelector(`[data-p="${name}"]`)?.classList.add("active");
+        if (name === "personal") loadPersonalPanel();
+        else if (name === "program") loadProgram();
+        else if (name === "ture") {
+          onTuraYMChange();
+        } else if (name === "servicii-tab") loadServiciiTab();
+        else if (name === "sarbatori") loadSarbatoriPanel();
+        else if (name === "rapoarte") loadRapoarte();
+        else if (name === "prezenta") loadPrezenta();
+        else if (name === "situatie") populateWorkerSel("sit-w");
+      }
+
+      /* ── MODAL UTILS ── */
+      function openMo(id) {
+        document.getElementById(id).classList.add("open");
+      }
+      function closeMo(id) {
+        document.getElementById(id).classList.remove("open");
+      }
+      // Conectăm selectul de serviciu la handler
+      document.addEventListener("change", (e) => {
+        if (e.target.id === "ms-serviciu") onMsServiciuChange();
+      });
+      document.querySelectorAll(".mo").forEach((o) =>
+        o.addEventListener("click", (e) => {
+          if (e.target === o) o.classList.remove("open");
+        }),
+      );
+    </script>
+  </body>
+</html>
