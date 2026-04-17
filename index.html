@@ -1416,14 +1416,24 @@
             </select>
           </div>
         </div>
-        <div id="pm-custom-name-row" style="display:none" class="fr">
+        <div id="pm-custom-name-row" style="display: none" class="fr">
           <div>
             <label>Nume tip tură personalizat *</label>
-            <input type="text" id="pm-custom-name" placeholder="ex: Gardă, Intervenție..." maxlength="30" />
+            <input
+              type="text"
+              id="pm-custom-name"
+              placeholder="ex: Gardă, Intervenție..."
+              maxlength="30"
+            />
           </div>
           <div>
             <label>Culoare afișare</label>
-            <input type="color" id="pm-custom-color" value="#e67e22" style="height:38px;padding:2px 4px;cursor:pointer" />
+            <input
+              type="color"
+              id="pm-custom-color"
+              value="#e67e22"
+              style="height: 38px; padding: 2px 4px; cursor: pointer"
+            />
           </div>
         </div>
         <div class="fr">
@@ -1512,14 +1522,24 @@
             </select>
           </div>
         </div>
-        <div id="ms-custom-name-row" style="display:none" class="fr">
+        <div id="ms-custom-name-row" style="display: none" class="fr">
           <div>
             <label>Nume tip tură personalizat *</label>
-            <input type="text" id="ms-custom-name" placeholder="ex: Gardă, Intervenție..." maxlength="30" />
+            <input
+              type="text"
+              id="ms-custom-name"
+              placeholder="ex: Gardă, Intervenție..."
+              maxlength="30"
+            />
           </div>
           <div>
             <label>Culoare afișare</label>
-            <input type="color" id="ms-custom-color" value="#e67e22" style="height:38px;padding:2px 4px;cursor:pointer" />
+            <input
+              type="color"
+              id="ms-custom-color"
+              value="#e67e22"
+              style="height: 38px; padding: 2px 4px; cursor: pointer"
+            />
           </div>
         </div>
         <div class="fr">
@@ -1563,10 +1583,16 @@
           <label>Specificați</label
           ><input type="text" id="ms-alt" placeholder="Descriere..." />
         </div>
-        <div id="ms-tr-ore-row" style="display:none">
+        <div id="ms-tr-ore-row" style="display: none">
           <label>Ore de recuperat (TR)</label>
-          <input type="number" id="ms-tr-ore" min="0" max="200" step="0.5" placeholder="ore" />
-        </div>
+          <input
+            type="number"
+            id="ms-tr-ore"
+            min="0"
+            max="200"
+            step="0.5"
+            placeholder="ore"
+          />
         </div>
         <label>Serviciu</label>
         <select id="ms-serviciu">
@@ -1608,7 +1634,7 @@
           <button class="mx" onclick="closeMo('mo-ushift')">✕</button>
         </div>
         <div class="ibox" style="margin-top: 0">
-          Poți modifica statusul și observațiile.
+          Poți modifica statusul, orele lucrate și observațiile.
         </div>
         <div
           id="us-info"
@@ -1630,9 +1656,27 @@
           <label>Specificați</label
           ><input type="text" id="us-alt" placeholder="Descriere..." />
         </div>
-        <div id="us-tr-ore-row" style="display:none">
+        <div id="us-tr-ore-row" style="display: none">
           <label>Ore de recuperat (TR)</label>
-          <input type="number" id="us-tr-ore" min="0" max="200" step="0.5" placeholder="ore" />
+          <input
+            type="number"
+            id="us-tr-ore"
+            min="0"
+            max="200"
+            step="0.5"
+            placeholder="ore"
+          />
+        </div>
+        <div>
+          <label>Ore lucrate</label>
+          <input
+            type="number"
+            id="us-hours"
+            value="12"
+            min="0"
+            max="24"
+            step=".5"
+          />
         </div>
         <label>Observații</label><textarea id="us-notes" rows="3"></textarea>
         <div id="us-msg" class="amsg"></div>
@@ -1665,9 +1709,13 @@
           <option value="curs">CRS — Curs</option>
           <option value="altele_rasp">Altele</option>
         </select>
-        <div id="rm-altele-row" style="display:none">
+        <div id="rm-altele-row" style="display: none">
           <label>Specificați</label>
-          <input type="text" id="rm-altele-text" placeholder="Descriere răspândire..." />
+          <input
+            type="text"
+            id="rm-altele-text"
+            placeholder="Descriere răspândire..."
+          />
         </div>
         <div class="fr">
           <div>
@@ -1836,7 +1884,15 @@
       ];
       // Tipuri de raspandire care anuleaza orele lucrate si SDSL pe zilele respective
       // (tot ce nu e 'prezent', 'tura_rec', 'tura_nep')
-      const ZERO_ORE_RASP = ["co", "cm", "delegare", "invoire", "curs", "altele", "altele_rasp"];
+      const ZERO_ORE_RASP = [
+        "co",
+        "cm",
+        "delegare",
+        "invoire",
+        "curs",
+        "altele",
+        "altele_rasp",
+      ];
 
       /* Generează badge HTML pentru status, cu ore TR în superscript */
       function renderStatusBadge(status, trOre) {
@@ -2185,19 +2241,17 @@
             // Workerul nu exista deloc - il cream (fallback daca triggerul nu a rulat)
             const nm =
               user.user_metadata?.full_name || user.email.split("@")[0];
-            await sb
-              .from("workers")
-              .insert([
-                {
-                  name: nm,
-                  email: user.email,
-                  role: "user",
-                  status: "activ",
-                  daily_norm: 8,
-                  user_id: user.id,
-                  order_nr: 99,
-                },
-              ]);
+            await sb.from("workers").insert([
+              {
+                name: nm,
+                email: user.email,
+                role: "user",
+                status: "activ",
+                daily_norm: 8,
+                user_id: user.id,
+                order_nr: 99,
+              },
+            ]);
           }
         }
         document.getElementById("u-name").textContent =
@@ -2344,9 +2398,10 @@
           const grp = {};
           dayShifts.forEach((s) => {
             // Grupare custom pe (shift_type + custom_shift_name) pentru a diferentia tipurile custom
-            const key = s.shift_type === "custom" && s.custom_shift_name
-              ? "custom_" + s.custom_shift_name
-              : s.shift_type;
+            const key =
+              s.shift_type === "custom" && s.custom_shift_name
+                ? "custom_" + s.custom_shift_name
+                : s.shift_type;
             if (!grp[key]) grp[key] = [];
             grp[key].push(s);
           });
@@ -2368,7 +2423,8 @@
               p.className =
                 "spill " +
                 (type === "zi" ? "sp-d" : type === "noapte" ? "sp-n" : "sp-c");
-              const icon = type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
+              const icon =
+                type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
               const hasSdsl = arr.some((s) => calcSdslOre(s) > 0);
               p.innerHTML = `${icon} ${arr.length}${hasSdsl ? '<span class="sdsl-tag">S</span>' : ""}`;
             }
@@ -2857,10 +2913,15 @@
               sh.status === "absent"
                 ? "ABS"
                 : STA_LABEL[sh.status] ||
-                  (sh.shift_type === "zi" ? "ZI" : sh.shift_type === "custom" && sh.custom_shift_name ? sh.custom_shift_name.substring(0,3).toUpperCase() : "▶N");
-            const customStyle = sh.shift_type === "custom" && sh.custom_shift_color
-              ? ` style="color:${sh.custom_shift_color}"`
-              : "";
+                  (sh.shift_type === "zi"
+                    ? "ZI"
+                    : sh.shift_type === "custom" && sh.custom_shift_name
+                      ? sh.custom_shift_name.substring(0, 3).toUpperCase()
+                      : "▶N");
+            const customStyle =
+              sh.shift_type === "custom" && sh.custom_shift_color
+                ? ` style="color:${sh.custom_shift_color}"`
+                : "";
             html += `<div class="${cls}"${customStyle}>${lbl}</div>`;
             if (sh.hours && !ZERO_ORE.includes(sh.status))
               html += `<div style="font-size:.58rem;color:var(--mut)">${sh.hours}h</div>`;
@@ -2976,7 +3037,14 @@
                     : "—";
                 statusCell = renderStatusBadge(st, sh.tr_ore);
               }
-              const tipIcon = sh.shift_type === "zi" ? "☀" : sh.shift_type === "noapte" ? "▶🌙" : sh.custom_shift_name ? `<span style="color:${sh.custom_shift_color||"var(--acc)"}">${sh.custom_shift_name.substring(0,3).toUpperCase()}</span>` : "⚡";
+              const tipIcon =
+                sh.shift_type === "zi"
+                  ? "☀"
+                  : sh.shift_type === "noapte"
+                    ? "▶🌙"
+                    : sh.custom_shift_name
+                      ? `<span style="color:${sh.custom_shift_color || "var(--acc)"}">${sh.custom_shift_name.substring(0, 3).toUpperCase()}</span>`
+                      : "⚡";
               html += `<tr><td>${d2.getDate()} ${MRO[d2.getMonth()]}${dm}</td><td>${tipIcon}</td><td style="white-space:nowrap">${int2}</td><td>${oreCell}</td><td>${sdslCell}</td><td style="font-size:.75rem;color:var(--mut)">${raspZero ? "—" : sh.serviciu || "—"}</td><td>${statusCell}</td><td style="color:var(--mut);font-size:.75rem">${sh.notes || ""} ${eb}</td></tr>`;
             });
           html += `</tbody></table></div>`;
@@ -3060,10 +3128,13 @@
                   cls = "srv-cell-n";
                 }
                 if (LIBER_STA.includes(st)) {
-                  cell = STA_LABEL[st] || st;
+                  const trLabel = STA_LABEL[st] || st;
+                  cell =
+                    st === "tura_rec" && sh.tr_ore
+                      ? `${trLabel}<sup style="font-size:.6em;vertical-align:super">${sh.tr_ore}</sup>`
+                      : trLabel;
                   cls = "srv-cell-lib";
                 }
-              } else if (nightEnd) {
                 // nightEnd este acoperit de raspandire? verificam si ziua precedenta
                 const nightEndRpZero = (rasp || []).find(
                   (r) =>
@@ -3258,9 +3329,10 @@
             html += `<div class="spill sp-ne">◀🌙 ${ne.length}</div>`;
           const grp2 = {};
           dayShifts.forEach((s) => {
-            const key2 = s.shift_type === "custom" && s.custom_shift_name
-              ? "custom_" + s.custom_shift_name
-              : s.shift_type;
+            const key2 =
+              s.shift_type === "custom" && s.custom_shift_name
+                ? "custom_" + s.custom_shift_name
+                : s.shift_type;
             if (!grp2[key2]) grp2[key2] = [];
             grp2[key2].push(s);
           });
@@ -3272,7 +3344,8 @@
               const abbr = cName.substring(0, 3).toUpperCase();
               html += `<div class="spill sp-custom" style="background:${cColor}22;color:${cColor};border-color:${cColor}">${abbr} ${arr.length}</div>`;
             } else {
-              const icon = type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
+              const icon =
+                type === "zi" ? "☀" : type === "noapte" ? "▶🌙" : "⚡";
               html += `<div class="spill ${type === "zi" ? "sp-d" : type === "noapte" ? "sp-n" : "sp-c"}">${icon} ${arr.length}</div>`;
             }
           });
@@ -3303,12 +3376,17 @@
             progExistingShifts = existing;
             document.getElementById("pm-del-btn").style.display = "inline-flex";
             // Dacă există o tură custom, precompletează numele și culoarea
-            const customEx = existing.find(s => s.shift_type === "custom" && s.custom_shift_name);
+            const customEx = existing.find(
+              (s) => s.shift_type === "custom" && s.custom_shift_name,
+            );
             if (customEx) {
               document.getElementById("pm-type").value = "custom";
-              document.getElementById("pm-custom-name").value = customEx.custom_shift_name || "";
-              document.getElementById("pm-custom-color").value = customEx.custom_shift_color || "#e67e22";
-              document.getElementById("pm-custom-name-row").style.display = "grid";
+              document.getElementById("pm-custom-name").value =
+                customEx.custom_shift_name || "";
+              document.getElementById("pm-custom-color").value =
+                customEx.custom_shift_color || "#e67e22";
+              document.getElementById("pm-custom-name-row").style.display =
+                "grid";
             }
           }
         }
@@ -3380,7 +3458,8 @@
           const cname = document.getElementById("pm-custom-name").value.trim();
           if (!cname) {
             msg.className = "amsg err";
-            msg.textContent = "Completează numele tipului de tură personalizat.";
+            msg.textContent =
+              "Completează numele tipului de tură personalizat.";
             return;
           }
         }
@@ -3400,8 +3479,14 @@
           parseFloat(document.getElementById("pm-hours").value) || null;
         const status = document.getElementById("pm-status").value;
         const notes = document.getElementById("pm-notes").value || null;
-        const customName = type === "custom" ? document.getElementById("pm-custom-name").value.trim() || null : null;
-        const customColor = type === "custom" ? document.getElementById("pm-custom-color").value || null : null;
+        const customName =
+          type === "custom"
+            ? document.getElementById("pm-custom-name").value.trim() || null
+            : null;
+        const customColor =
+          type === "custom"
+            ? document.getElementById("pm-custom-color").value || null
+            : null;
         const { data: ex } = await sb
           .from("shifts")
           .select("worker_id")
@@ -3516,7 +3601,7 @@
                   : sh.shift_type === "noapte"
                     ? "▶🌙 Noapte"
                     : sh.custom_shift_name
-                      ? `<span style="color:${sh.custom_shift_color||"var(--acc)"}">⚡ ${sh.custom_shift_name}</span>`
+                      ? `<span style="color:${sh.custom_shift_color || "var(--acc)"}">⚡ ${sh.custom_shift_name}</span>`
                       : "⚡ Special"
                 : "—";
           const int3 = sh
@@ -3650,8 +3735,10 @@
               // Câmpuri noi: tip personalizat
               document.getElementById("ms-custom-name-row").style.display =
                 sh.shift_type === "custom" ? "grid" : "none";
-              document.getElementById("ms-custom-name").value = sh.custom_shift_name || "";
-              document.getElementById("ms-custom-color").value = sh.custom_shift_color || "#e67e22";
+              document.getElementById("ms-custom-name").value =
+                sh.custom_shift_name || "";
+              document.getElementById("ms-custom-color").value =
+                sh.custom_shift_color || "#e67e22";
               // Câmp ore TR
               document.getElementById("ms-tr-ore-row").style.display =
                 sh.status === "tura_rec" ? "block" : "none";
@@ -3660,30 +3747,56 @@
                   document.getElementById("ms-tr-ore").value = sh.tr_ore;
                 } else {
                   // Autocompletare din ore reportate luna precedentă
-                  const worker = allWorkers.find(w => w.id === sh.worker_id);
+                  const worker = allWorkers.find((w) => w.id === sh.worker_id);
                   if (worker) {
                     const shDate = new Date(sh.date + "T12:00:00");
-                    const curY = shDate.getFullYear(), curM = shDate.getMonth() + 1;
+                    const curY = shDate.getFullYear(),
+                      curM = shDate.getMonth() + 1;
                     const prevM = curM === 1 ? 12 : curM - 1;
                     const prevY = curM === 1 ? curY - 1 : curY;
-                    const prevFrom = `${prevY}-${String(prevM).padStart(2,"0")}-01`;
+                    const prevFrom = `${prevY}-${String(prevM).padStart(2, "0")}-01`;
                     const prevLast = new Date(prevY, prevM, 0).getDate();
-                    const prevTo = `${prevY}-${String(prevM).padStart(2,"0")}-${prevLast}`;
-                    sb.from("shifts").select("*").eq("worker_id", worker.id).gte("date", prevFrom).lte("date", prevTo)
-                      .then(async ({data: prevShifts}) => {
-                        const {data: prevRasp} = await sb.from("raspandiri").select("*").eq("worker_id", worker.id);
-                        const prevMonthRasp = (prevRasp||[]).filter(r => r.date_from <= prevTo && r.date_to >= prevFrom);
+                    const prevTo = `${prevY}-${String(prevM).padStart(2, "0")}-${prevLast}`;
+                    sb.from("shifts")
+                      .select("*")
+                      .eq("worker_id", worker.id)
+                      .gte("date", prevFrom)
+                      .lte("date", prevTo)
+                      .then(async ({ data: prevShifts }) => {
+                        const { data: prevRasp } = await sb
+                          .from("raspandiri")
+                          .select("*")
+                          .eq("worker_id", worker.id);
+                        const prevMonthRasp = (prevRasp || []).filter(
+                          (r) => r.date_from <= prevTo && r.date_to >= prevFrom,
+                        );
                         let prevOre = 0;
-                        (prevShifts||[]).forEach(s => {
-                          if (ZERO_ORE.includes(s.status)||s.status==="absent") return;
+                        (prevShifts || []).forEach((s) => {
+                          if (
+                            ZERO_ORE.includes(s.status) ||
+                            s.status === "absent"
+                          )
+                            return;
                           if (isRaspZeroOre(s.date, prevMonthRasp)) return;
-                          let h = parseFloat(s.hours)||0;
-                          if (s.shift_type==="noapte") { const nd = nextDay(s.date); if (nd>=prevFrom&&nd<=prevTo) { const {hOnStart} = splitNightShift(s); h=hOnStart; } }
-                          prevOre+=h;
+                          let h = parseFloat(s.hours) || 0;
+                          if (s.shift_type === "noapte") {
+                            const nd = nextDay(s.date);
+                            if (nd >= prevFrom && nd <= prevTo) {
+                              const { hOnStart } = splitNightShift(s);
+                              h = hOnStart;
+                            }
+                          }
+                          prevOre += h;
                         });
-                        const prevNorm = getWorkerNorm(worker, prevY, prevM, prevMonthRasp);
+                        const prevNorm = getWorkerNorm(
+                          worker,
+                          prevY,
+                          prevM,
+                          prevMonthRasp,
+                        );
                         const prevSupl = prevOre - prevNorm;
-                        document.getElementById("ms-tr-ore").value = prevSupl > 0 ? prevSupl : "";
+                        document.getElementById("ms-tr-ore").value =
+                          prevSupl > 0 ? prevSupl : "";
                       });
                   }
                 }
@@ -3759,7 +3872,8 @@
           const cname = document.getElementById("ms-custom-name").value.trim();
           if (!cname) {
             msg.className = "amsg err";
-            msg.textContent = "Completează numele tipului de tură personalizat.";
+            msg.textContent =
+              "Completează numele tipului de tură personalizat.";
             return;
           }
         }
@@ -3773,11 +3887,18 @@
           status === "altele"
             ? document.getElementById("ms-alt").value || null
             : null;
-        const customName = shiftType === "custom" ? document.getElementById("ms-custom-name").value.trim() || null : null;
-        const customColor = shiftType === "custom" ? document.getElementById("ms-custom-color").value || null : null;
-        const trOre = status === "tura_rec"
-          ? parseFloat(document.getElementById("ms-tr-ore").value) || null
-          : null;
+        const customName =
+          shiftType === "custom"
+            ? document.getElementById("ms-custom-name").value.trim() || null
+            : null;
+        const customColor =
+          shiftType === "custom"
+            ? document.getElementById("ms-custom-color").value || null
+            : null;
+        const trOre =
+          status === "tura_rec"
+            ? parseFloat(document.getElementById("ms-tr-ore").value) || null
+            : null;
         const payload = {
           worker_id: wid,
           date,
@@ -3846,6 +3967,13 @@
             document.getElementById("us-alt").value = sh.notes_alt || "";
             document.getElementById("us-alt-row").style.display =
               sh.status === "altele" ? "block" : "none";
+            // Ore lucrate — precompletare din shift
+            document.getElementById("us-hours").value =
+              sh.hours != null
+                ? sh.hours
+                : ZERO_ORE.includes(sh.status)
+                  ? 0
+                  : 12;
             // TR ore: dacă există deja setate, le precompletăm; altfel calculăm din luna prec
             document.getElementById("us-tr-ore-row").style.display =
               sh.status === "tura_rec" ? "block" : "none";
@@ -3854,29 +3982,53 @@
                 document.getElementById("us-tr-ore").value = sh.tr_ore;
               } else {
                 // Autocompletare din ore reportate luna precedentă
-                const worker = allWorkers.find(w => w.id === sh.worker_id);
+                const worker = allWorkers.find((w) => w.id === sh.worker_id);
                 if (worker) {
                   const shDate = new Date(sh.date + "T12:00:00");
-                  const curY = shDate.getFullYear(), curM = shDate.getMonth() + 1;
+                  const curY = shDate.getFullYear(),
+                    curM = shDate.getMonth() + 1;
                   const prevM = curM === 1 ? 12 : curM - 1;
                   const prevY = curM === 1 ? curY - 1 : curY;
-                  const prevFrom = `${prevY}-${String(prevM).padStart(2,"0")}-01`;
+                  const prevFrom = `${prevY}-${String(prevM).padStart(2, "0")}-01`;
                   const prevLast = new Date(prevY, prevM, 0).getDate();
-                  const prevTo = `${prevY}-${String(prevM).padStart(2,"0")}-${prevLast}`;
-                  const { data: prevShifts } = await sb.from("shifts").select("*").eq("worker_id", worker.id).gte("date", prevFrom).lte("date", prevTo);
-                  const { data: prevRasp } = await sb.from("raspandiri").select("*").eq("worker_id", worker.id);
-                  const prevMonthRasp = (prevRasp||[]).filter(r => r.date_from <= prevTo && r.date_to >= prevFrom);
+                  const prevTo = `${prevY}-${String(prevM).padStart(2, "0")}-${prevLast}`;
+                  const { data: prevShifts } = await sb
+                    .from("shifts")
+                    .select("*")
+                    .eq("worker_id", worker.id)
+                    .gte("date", prevFrom)
+                    .lte("date", prevTo);
+                  const { data: prevRasp } = await sb
+                    .from("raspandiri")
+                    .select("*")
+                    .eq("worker_id", worker.id);
+                  const prevMonthRasp = (prevRasp || []).filter(
+                    (r) => r.date_from <= prevTo && r.date_to >= prevFrom,
+                  );
                   let prevOre = 0;
-                  (prevShifts||[]).forEach(s => {
-                    if (ZERO_ORE.includes(s.status)||s.status==="absent") return;
+                  (prevShifts || []).forEach((s) => {
+                    if (ZERO_ORE.includes(s.status) || s.status === "absent")
+                      return;
                     if (isRaspZeroOre(s.date, prevMonthRasp)) return;
-                    let h = parseFloat(s.hours)||0;
-                    if (s.shift_type==="noapte") { const nd = nextDay(s.date); if (nd>=prevFrom&&nd<=prevTo) { const {hOnStart} = splitNightShift(s); h=hOnStart; } }
-                    prevOre+=h;
+                    let h = parseFloat(s.hours) || 0;
+                    if (s.shift_type === "noapte") {
+                      const nd = nextDay(s.date);
+                      if (nd >= prevFrom && nd <= prevTo) {
+                        const { hOnStart } = splitNightShift(s);
+                        h = hOnStart;
+                      }
+                    }
+                    prevOre += h;
                   });
-                  const prevNorm = getWorkerNorm(worker, prevY, prevM, prevMonthRasp);
+                  const prevNorm = getWorkerNorm(
+                    worker,
+                    prevY,
+                    prevM,
+                    prevMonthRasp,
+                  );
                   const prevSupl = prevOre - prevNorm;
-                  document.getElementById("us-tr-ore").value = prevSupl > 0 ? prevSupl : "";
+                  document.getElementById("us-tr-ore").value =
+                    prevSupl > 0 ? prevSupl : "";
                 }
               }
             }
@@ -3890,6 +4042,12 @@
           st === "altele" ? "block" : "none";
         document.getElementById("us-tr-ore-row").style.display =
           st === "tura_rec" ? "block" : "none";
+        // Ajustare automată ore lucrate
+        if (ZERO_ORE.includes(st)) {
+          document.getElementById("us-hours").value = "0";
+        } else if (st === "prezent") {
+          document.getElementById("us-hours").value = "12";
+        }
       }
       async function saveUShift() {
         const msg = document.getElementById("us-msg");
@@ -3912,19 +4070,22 @@
           return;
         }
         const status = document.getElementById("us-status").value;
+        const hoursVal = ZERO_ORE.includes(status)
+          ? 0
+          : parseFloat(document.getElementById("us-hours").value) || null;
         const payload = {
           status,
+          hours: hoursVal,
           notes: document.getElementById("us-notes").value || null,
           notes_alt:
             status === "altele"
               ? document.getElementById("us-alt").value || null
               : null,
-          tr_ore: status === "tura_rec"
-            ? parseFloat(document.getElementById("us-tr-ore").value) || null
-            : null,
+          tr_ore:
+            status === "tura_rec"
+              ? parseFloat(document.getElementById("us-tr-ore").value) || null
+              : null,
         };
-        // Daca TN sau TR, orele = 0
-        if (ZERO_ORE.includes(status)) payload.hours = 0;
         const { error } = await sb
           .from("shifts")
           .update(payload)
@@ -3992,7 +4153,9 @@
           return;
         }
         if (type === "altele_rasp") {
-          const altText = document.getElementById("rm-altele-text").value.trim();
+          const altText = document
+            .getElementById("rm-altele-text")
+            .value.trim();
           if (!altText) {
             msg.className = "amsg err";
             msg.textContent = "Completează descrierea pentru 'Altele'.";
@@ -4013,16 +4176,21 @@
             return;
           }
         }
-        const alteleText = type === "altele_rasp"
-          ? document.getElementById("rm-altele-text").value.trim()
-          : null;
+        const alteleText =
+          type === "altele_rasp"
+            ? document.getElementById("rm-altele-text").value.trim()
+            : null;
         const notesBase = document.getElementById("rm-notes").value || null;
         const payload = {
           worker_id: wid,
           type,
           date_from: from,
           date_to: to,
-          notes: alteleText ? (notesBase ? alteleText + " | " + notesBase : alteleText) : notesBase,
+          notes: alteleText
+            ? notesBase
+              ? alteleText + " | " + notesBase
+              : alteleText
+            : notesBase,
           created_by: CU.id,
         };
         const { error } = await sb.from("raspandiri").insert([payload]);
@@ -4108,7 +4276,11 @@
               } else if (sh) {
                 const st = sh.status || "prezent";
                 if (LIBER_STA.includes(st)) {
-                  cell = STA_LABEL[st] || st;
+                  const trLabel = STA_LABEL[st] || st;
+                  cell =
+                    st === "tura_rec" && sh.tr_ore
+                      ? `${trLabel}<sup style="font-size:.6em;vertical-align:super">${sh.tr_ore}</sup>`
+                      : trLabel;
                   cls = "srv-cell-lib";
                 } else {
                   if (sh.shift_type === "custom" && sh.custom_shift_name) {
@@ -4190,18 +4362,16 @@
           return;
         }
         const year = new Date(date + "T12:00:00").getFullYear();
-        const { error } = await sb
-          .from("custom_holidays")
-          .insert([
-            {
-              date,
-              name,
-              recurring: document.getElementById("hm-rec").value === "true",
-              year,
-              created_by: CU.id,
-              created_by_name: CP.full_name,
-            },
-          ]);
+        const { error } = await sb.from("custom_holidays").insert([
+          {
+            date,
+            name,
+            recurring: document.getElementById("hm-rec").value === "true",
+            year,
+            created_by: CU.id,
+            created_by_name: CP.full_name,
+          },
+        ]);
         if (error) {
           msg.className = "amsg err";
           msg.textContent = error.message;
