@@ -1594,6 +1594,82 @@
             placeholder="ore"
           />
         </div>
+        <!-- SPLIT ORE TURĂ NOAPTE — vizibil doar pentru tip=noapte, doar admin -->
+        <div
+          id="ms-night-split-row"
+          style="
+            display: none;
+            margin-top: 0.6rem;
+            padding: 0.7rem 0.85rem;
+            background: #6e3bb511;
+            border: 1px dashed var(--ngt);
+            border-radius: var(--r);
+          "
+        >
+          <div
+            style="
+              font-size: 0.75rem;
+              color: #b794f4;
+              font-weight: 600;
+              margin-bottom: 0.5rem;
+            "
+          >
+            🌙 Distribuție ore tură noapte
+          </div>
+          <div class="fr3">
+            <div>
+              <label style="color: #b794f4"
+                >Înainte de 00:00
+                <span style="color: var(--mut); font-weight: 400"
+                  >(seara)</span
+                ></label
+              >
+              <input
+                type="number"
+                id="ms-night-pre"
+                min="0"
+                max="12"
+                step="0.5"
+                placeholder="4"
+                oninput="onNightSplitChange('pre')"
+              />
+            </div>
+            <div>
+              <label style="color: #b794f4"
+                >După 00:00
+                <span style="color: var(--mut); font-weight: 400"
+                  >(dimineața)</span
+                ></label
+              >
+              <input
+                type="number"
+                id="ms-night-post"
+                min="0"
+                max="12"
+                step="0.5"
+                placeholder="8"
+                oninput="onNightSplitChange('post')"
+              />
+            </div>
+            <div>
+              <label style="color: var(--mut)">Total ore (auto)</label>
+              <input
+                type="number"
+                id="ms-night-total"
+                min="0"
+                max="24"
+                step="0.5"
+                placeholder="12"
+                readonly
+                style="opacity: 0.6; cursor: default"
+              />
+            </div>
+          </div>
+          <div
+            id="ms-night-split-info"
+            style="font-size: 0.72rem; color: var(--mut); margin-top: 0.4rem"
+          ></div>
+        </div>
         <label>Serviciu</label>
         <select id="ms-serviciu">
           <option value="">— fără serviciu —</option>
@@ -2685,49 +2761,77 @@
         );
 
         // Calcul ore reportate din luna precedenta
-        // Luna precedenta: shifts + norma
-        let oreReportate = 0;
-        const prevM = month === 1 ? 12 : month - 1;
-        const prevY = month === 1 ? year - 1 : year;
-        const prevFrom = `${prevY}-${String(prevM).padStart(2, "0")}-01`;
-        const prevLast = new Date(prevY, prevM, 0).getDate();
-        const prevTo = `${prevY}-${String(prevM).padStart(2, "0")}-${prevLast}`;
-        const { data: prevShifts } = await sb
-          .from("shifts")
-          .select("*")
-          .eq("worker_id", wid)
-          .gte("date", prevFrom)
-          .lte("date", prevTo);
-        const { data: prevRasp } = await sb
-          .from("raspandiri")
-          .select("*")
-          .eq("worker_id", wid);
-        const prevMonthRasp = (prevRasp || []).filter(
-          (r) => r.date_from <= prevTo && r.date_to >= prevFrom,
-        );
-        if (prevShifts && prevShifts.length > 0) {
-          // Calculeaza ore lucrate luna precedenta
-          let prevOre = 0;
-          prevShifts.forEach((s) => {
+        // Functie recursiva cu adancime limitata pentru a propaga corect surplusul
+        async function calcOreReportateRec(wid, y, m, worker, depth) {
+          if (depth <= 0) return 0;
+          const pM = m === 1 ? 12 : m - 1;
+          const pY = m === 1 ? y - 1 : y;
+          const pFrom = `${pY}-${String(pM).padStart(2, "0")}-01`;
+          const pLast = new Date(pY, pM, 0).getDate();
+          const pTo = `${pY}-${String(pM).padStart(2, "0")}-${pLast}`;
+          const { data: pShifts } = await sb
+            .from("shifts")
+            .select("*")
+            .eq("worker_id", wid)
+            .gte("date", pFrom)
+            .lte("date", pTo);
+          if (!pShifts || pShifts.length === 0) return 0;
+          const { data: pRaspAll } = await sb
+            .from("raspandiri")
+            .select("*")
+            .eq("worker_id", wid);
+          const pRasp = (pRaspAll || []).filter(
+            (r) => r.date_from <= pTo && r.date_to >= pFrom,
+          );
+          // Calculeaza ora noapte carry-in (din luna ante-precedenta)
+          const pPrevLastDay = prevDay(pFrom);
+          const { data: pNightCarry } = await sb
+            .from("shifts")
+            .select("*")
+            .eq("worker_id", wid)
+            .eq("date", pPrevLastDay)
+            .eq("shift_type", "noapte");
+          let pOre = 0;
+          pShifts.forEach((s) => {
             if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
-            // Daca ziua este acoperita de raspandire cu ore 0 (in luna precedenta), skip
-            if (isRaspZeroOre(s.date, prevMonthRasp)) return;
+            if (isRaspZeroOre(s.date, pRasp)) return;
             let h = parseFloat(s.hours) || 0;
-            // Tura noapte care trece in luna curenta: doar orele din luna prec
             if (s.shift_type === "noapte") {
               const endDs = nextDay(s.date);
-              if (endDs >= from) {
-                // trece in luna curenta - calculeaza ore pe luna prec
+              const endMonth = parseInt(endDs.substring(5, 7));
+              const endYear = parseInt(endDs.substring(0, 4));
+              if (endMonth !== pM || endYear !== pY) {
                 const { hOnStart } = splitNightShift(s);
                 h = hOnStart;
               }
             }
-            prevOre += h;
+            pOre += h;
           });
-          const prevNorm = getWorkerNorm(worker, prevY, prevM, prevMonthRasp);
-          const prevSupl = prevOre - prevNorm;
-          if (prevSupl > 0) oreReportate = prevSupl;
+          // Adaugam orele carry-in din luna ante-precedenta
+          (pNightCarry || []).forEach((s) => {
+            if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+            const endDs = nextDay(s.date);
+            if (endDs !== pFrom) return;
+            if (isRaspZeroOre(endDs, pRasp)) return;
+            const { hOnEnd } = splitNightShift(s);
+            if (hOnEnd > 0) pOre += hOnEnd;
+          });
+          const pNorm = getWorkerNorm(worker, pY, pM, pRasp);
+          // Ore reportate din luna ante-precedenta (recursiv) — pasam pY/pM ca luna curenta a apelului recursiv
+          const pReportate = await calcOreReportateRec(
+            wid,
+            pY,
+            pM,
+            worker,
+            depth - 1,
+          );
+          const pSupl = pOre + pReportate - pNorm;
+          return pSupl > 0 ? Math.round(pSupl * 10) / 10 : 0;
         }
+
+        let oreReportate = 0;
+        // Calculam cu adancime 3 (suficient pentru orice lant realist de reportari)
+        oreReportate = await calcOreReportateRec(wid, year, month, worker, 3);
 
         renderSituatie(
           worker,
@@ -2830,10 +2934,10 @@
 
         let html = `
   <div style="font-size:.95rem;font-weight:600;margin-bottom:.65rem">${worker.name} <span style="font-size:.78rem;color:var(--mut);font-weight:400">— ${MRO[month - 1]} ${year}</span></div>
-  ${oreReportate > 0 ? `<div class="sdsl-alert" style="background:#2ea04322;border-color:var(--ok);color:var(--ok);margin-bottom:.65rem">▶ Ore suplimentare reportate din luna precedentă: <strong>+${oreReportate}h</strong></div>` : ""}
+  <div class="sdsl-alert" style="background:${oreReportate > 0 ? "#2ea04322" : "var(--surf2)"};border-color:${oreReportate > 0 ? "var(--ok)" : "var(--brd)"};color:${oreReportate > 0 ? "var(--ok)" : "var(--mut)"};margin-bottom:.65rem">▶ Ore suplimentare reportate din luna precedentă: <strong>${oreReportate > 0 ? "+" : ""}${oreReportate}h</strong></div>
   <div class="stats-g">
     <div class="sc"><div class="sc-v">${total}</div><div class="sc-l">Ore lucrate</div></div>
-    ${oreReportate > 0 ? `<div class="sc"><div class="sc-v" style="color:var(--ok)">+${oreReportate}</div><div class="sc-l">Reportate luna prec.</div></div>` : ""}
+    <div class="sc"><div class="sc-v" style="color:${oreReportate > 0 ? "var(--ok)" : "var(--mut)"}">${oreReportate > 0 ? "+" : ""}${oreReportate}</div><div class="sc-l">Reportate luna prec.</div></div>
     <div class="sc"><div class="sc-v" style="color:var(--wrn)">${oreSdsl}</div><div class="sc-l">Ore S.D.S.L.</div></div>
     <div class="sc"><div class="sc-v">${norm}</div><div class="sc-l">Normă (${nZile}z×${worker.daily_norm || 8}h)</div></div>
     <div class="sc"><div class="sc-v" style="color:${oreSupl >= 0 ? "var(--ok)" : "var(--err)"}">${oreSupl >= 0 ? "+" : ""}${Math.round(oreSupl * 10) / 10}</div><div class="sc-l">Ore suplimentare</div></div>
@@ -3661,6 +3765,11 @@
         document.getElementById("ms-custom-color").value = "#e67e22";
         document.getElementById("ms-tr-ore-row").style.display = "none";
         document.getElementById("ms-tr-ore").value = "";
+        document.getElementById("ms-night-split-row").style.display = "none";
+        document.getElementById("ms-night-pre").value = "4";
+        document.getElementById("ms-night-post").value = "8";
+        document.getElementById("ms-night-total").value = "12";
+        document.getElementById("ms-night-split-info").textContent = "";
         populateWorkerSel("ms-worker");
         document.getElementById("ms-type").value = "zi";
         document.getElementById("ms-start").value = "08:00";
@@ -3802,6 +3911,19 @@
                   }
                 }
               }
+              // Split ore tură noapte (admin only)
+              if (sh.shift_type === "noapte" && CP?.role === "admin") {
+                document.getElementById("ms-night-split-row").style.display =
+                  "block";
+                const { hOnStart, hOnEnd } = splitNightShift(sh);
+                document.getElementById("ms-night-pre").value = hOnStart;
+                document.getElementById("ms-night-post").value = hOnEnd;
+                document.getElementById("ms-night-total").value =
+                  Math.round((hOnStart + hOnEnd) * 10) / 10;
+              } else {
+                document.getElementById("ms-night-split-row").style.display =
+                  "none";
+              }
               onMsChange();
             }, 60);
             openMo("mo-shift");
@@ -3824,8 +3946,10 @@
         } else sdslEl.style.display = "none";
         if (type === "noapte") {
           const nd = nextDay(date);
-          nEl.innerHTML = `🌙 ${fmtDate(date)} 20:00 → ${fmtDate(nd)} 08:00${isSdsl(nd) ? ` <span style="color:var(--wrn)">(a doua zi: ${isHol(nd) || "weekend"})</span>` : ""}`;
+          nEl.innerHTML = `🌙 ${fmtDate(date)} ${document.getElementById("ms-start").value || "20:00"} → ${fmtDate(nd)} ${document.getElementById("ms-end").value || "08:00"}${isSdsl(nd) ? ` <span style="color:var(--wrn)">(a doua zi: ${isHol(nd) || "weekend"})</span>` : ""}`;
           nEl.style.display = "block";
+          // Refresh night split info text
+          onNightSplitChange(null);
         } else nEl.style.display = "none";
       }
       function onMsTypeChange() {
@@ -3838,10 +3962,63 @@
           document.getElementById("ms-start").value = "20:00";
           document.getElementById("ms-end").value = "08:00";
           document.getElementById("ms-hours").value = "12";
+          // Prefill split cu valorile implicite 4h+8h
+          document.getElementById("ms-night-pre").value = "4";
+          document.getElementById("ms-night-post").value = "8";
+          document.getElementById("ms-night-total").value = "12";
         }
         document.getElementById("ms-custom-name-row").style.display =
           type === "custom" ? "grid" : "none";
+        // Night split row vizibil doar pentru admin + tip noapte
+        document.getElementById("ms-night-split-row").style.display =
+          type === "noapte" && CP?.role === "admin" ? "block" : "none";
         onMsChange();
+      }
+
+      function onNightSplitChange(which) {
+        const pre =
+          parseFloat(document.getElementById("ms-night-pre").value) || 0;
+        const post =
+          parseFloat(document.getElementById("ms-night-post").value) || 0;
+        const total = Math.round((pre + post) * 10) / 10;
+        document.getElementById("ms-night-total").value = total || "";
+        // Dacă e apelat de utilizator (nu refresh automat din onMsChange), sincronizăm orele și timpii
+        if (which !== null) {
+          if (total > 0) document.getElementById("ms-hours").value = total;
+          // Ora de start: cu pre ore înainte de miezul nopții => startH = 24 - pre
+          if (pre > 0 && pre <= 12) {
+            const startTotalMin = Math.round((24 - pre) * 60);
+            const sh = Math.floor(startTotalMin / 60) % 24;
+            const sm = startTotalMin % 60;
+            document.getElementById("ms-start").value =
+              `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
+          }
+          // Ora de end: post ore după miezul nopții
+          if (post >= 0 && post <= 12) {
+            const endTotalMin = Math.round(post * 60);
+            const eh = Math.floor(endTotalMin / 60);
+            const em = endTotalMin % 60;
+            document.getElementById("ms-end").value =
+              `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
+          }
+        }
+        // Info text — folosim valorile curente din câmpurile start/end
+        const infoEl = document.getElementById("ms-night-split-info");
+        const date = document.getElementById("ms-date").value;
+        const startVal = document.getElementById("ms-start").value || "20:00";
+        const endVal = document.getElementById("ms-end").value || "08:00";
+        if (date && (pre > 0 || post > 0)) {
+          const nd = nextDay(date);
+          const sdslPre = isSdsl(date)
+            ? ' <span style="color:var(--wrn)">★SDSL</span>'
+            : "";
+          const sdslPost = isSdsl(nd)
+            ? ' <span style="color:var(--wrn)">★SDSL</span>'
+            : "";
+          infoEl.innerHTML = `${fmtDate(date)} ${startVal}–00:00 (<strong>${pre}h</strong>${sdslPre}) | ${fmtDate(nd)} 00:00–${endVal} (<strong>${post}h</strong>${sdslPost})`;
+        } else {
+          infoEl.textContent = "";
+        }
       }
       function onMsStatusChange() {
         const st = document.getElementById("ms-status").value;
@@ -3876,6 +4053,26 @@
             msg.textContent =
               "Completează numele tipului de tură personalizat.";
             return;
+          }
+        }
+        // Validare split ore tură noapte
+        if (shiftType === "noapte" && CP?.role === "admin") {
+          const pre = parseFloat(document.getElementById("ms-night-pre").value);
+          const post = parseFloat(
+            document.getElementById("ms-night-post").value,
+          );
+          if (!isNaN(pre) && !isNaN(post)) {
+            if (pre < 0 || post < 0) {
+              msg.className = "amsg err";
+              msg.textContent = "Orele nu pot fi negative.";
+              return;
+            }
+            if (pre + post > 24) {
+              msg.className = "amsg err";
+              msg.textContent =
+                "Suma orelor (înainte + după miezul nopții) nu poate depăși 24h.";
+              return;
+            }
           }
         }
         const srvRaw = document.getElementById("ms-serviciu").value;
@@ -3918,6 +4115,31 @@
           tr_ore: trOre,
           created_by: CU.id,
         };
+        // Dacă e tură noapte și admin, recalculăm din split
+        if (shiftType === "noapte" && CP?.role === "admin") {
+          const pre = parseFloat(document.getElementById("ms-night-pre").value);
+          const post = parseFloat(
+            document.getElementById("ms-night-post").value,
+          );
+          if (!isNaN(pre) && !isNaN(post) && (pre > 0 || post > 0)) {
+            const totalH = Math.round((pre + post) * 10) / 10;
+            payload.hours = ZERO_ORE.includes(status) ? 0 : totalH;
+            // start_time: cu pre ore înainte de miezul nopții (ex: 4h → 20:00, 3.5h → 20:30)
+            if (pre >= 0 && pre <= 12) {
+              const startTotalMin = Math.round((24 - pre) * 60);
+              const sh = Math.floor(startTotalMin / 60) % 24;
+              const sm = startTotalMin % 60;
+              payload.start_time = `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
+            }
+            // end_time: post ore după miezul nopții (ex: 8h → 08:00, 7.5h → 07:30)
+            if (post >= 0 && post <= 12) {
+              const endTotalMin = Math.round(post * 60);
+              const eh = Math.floor(endTotalMin / 60);
+              const em = endTotalMin % 60;
+              payload.end_time = `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
+            }
+          }
+        }
         let error;
         if (editSId)
           ({ error } = await sb
