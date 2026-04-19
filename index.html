@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1"
     />
-    <title>TuraManager</title>
+    <title>Tura-Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       :root {
@@ -3400,7 +3400,10 @@
           .filter((w) => w.status === "activ" || !w.status)
           .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .forEach((w) => {
-            html += `<tr><td class="name-col">${w.grad ? `<span style="font-size:.65rem;color:var(--mut);display:block">${w.grad}</span>` : ""}${w.name}</td>`;
+            const gradNr = [w.grad, w.order_nr != null ? `(${w.order_nr})` : ""]
+              .filter(Boolean)
+              .join(" ");
+            html += `<tr><td class="name-col">${gradNr ? `<span style="font-size:.65rem;color:var(--mut);display:block">${gradNr}</span>` : ""}${w.name}</td>`;
             for (let d = 1; d <= days; d++) {
               const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
               const sh = (shifts || []).find(
@@ -4678,7 +4681,13 @@
           .filter((w) => w.status === "activ" || !w.status)
           .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .forEach((w) => {
-            html += `<tr><td class="name-col">${w.grad ? `<span style="font-size:.65rem;color:var(--mut);display:block">${w.grad}</span>` : ""}${w.name}</td>`;
+            const gradNrS = [
+              w.grad,
+              w.order_nr != null ? `(${w.order_nr})` : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            html += `<tr><td class="name-col">${gradNrS ? `<span style="font-size:.65rem;color:var(--mut);display:block">${gradNrS}</span>` : ""}${w.name}</td>`;
             for (let d = 1; d <= days; d++) {
               const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
               const sh = (shifts || []).find(
