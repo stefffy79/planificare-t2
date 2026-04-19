@@ -2700,9 +2700,20 @@
           ? `<div class="sdsl-alert">⚠ Zi S.D.S.L. — orele vor fi evidențiate distinct</div>`
           : "";
 
+        // Worker IDs care au raspandire activa (CO, CM, etc.) - exclud din tabelele de ture
+        const raspWorkerIds = new Set(rasp.map((r) => r.worker_id));
+        // Shifts cu status LIBER (TN, TR, CO etc.) - vor aparea in sectiunea de jos
+        const liberShifts = shifts.filter((s) =>
+          LIBER_STA.includes(s.status || ""),
+        );
+        const liberShiftIds = new Set(liberShifts.map((s) => s.worker_id));
+        // Combinat: toti cei exclusi din tabelele de ture de sus
+        const excludeIds = new Set([...raspWorkerIds, ...liberShiftIds]);
+
         const renderGrp = (ttl, arr, isEnd = false) => {
-          if (!arr.length) return "";
-          const sorted = [...arr].sort((a, b) =>
+          const filtered = arr.filter((sh) => !excludeIds.has(sh.worker_id));
+          if (!filtered.length) return "";
+          const sorted = [...filtered].sort((a, b) =>
             (a.workers?.name || "").localeCompare(b.workers?.name || "", "ro"),
           );
           let s = `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">${ttl}</div>`;
@@ -2760,19 +2771,45 @@
           html += renderGrp(`⚡ ${name}`, arr);
         });
 
-        // Răspândiri
-        if (rasp.length) {
-          const raspSorted = [...rasp].sort((a, b) => {
-            const na = allWorkers.find((w) => w.id === a.worker_id)?.name || "";
-            const nb = allWorkers.find((w) => w.id === b.worker_id)?.name || "";
-            return na.localeCompare(nb, "ro");
-          });
+        // Răspândiri + Libere din shifts (TN, TR, CO din tură)
+        const allLiber = [
+          ...rasp.map((r) => ({
+            worker_id: r.worker_id,
+            tip: r.type,
+            tipLabel: STA_LABEL[r.type] || r.type,
+            tipBadge: STA_BADGE[r.type] || "b-ok",
+            perioada: `${fmtDate(r.date_from)} → ${fmtDate(r.date_to)}`,
+            notes: r.notes || "",
+            fromShift: false,
+            shiftId: null,
+          })),
+          ...liberShifts.map((s) => ({
+            worker_id: s.worker_id,
+            tip: s.status,
+            tipLabel: STA_LABEL[s.status] || s.status,
+            tipBadge: STA_BADGE[s.status] || "b-ok",
+            perioada: `${fmtTime(s.start_time)}–${fmtTime(s.end_time)}`,
+            notes: s.notes || "",
+            fromShift: true,
+            shiftId: s.id,
+            trOre: s.tr_ore,
+          })),
+        ].sort((a, b) => {
+          const na = allWorkers.find((w) => w.id === a.worker_id)?.name || "";
+          const nb = allWorkers.find((w) => w.id === b.worker_id)?.name || "";
+          return na.localeCompare(nb, "ro");
+        });
+
+        if (allLiber.length) {
           html += `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Răspândiri / Libere</div>`;
           html += `<table class="stbl"><thead><tr><th>Lucrător</th><th>Tip</th><th>Perioadă</th><th>Note</th></tr></thead><tbody>`;
-          raspSorted.forEach((r) => {
+          allLiber.forEach((r) => {
             const wname =
               allWorkers.find((w) => w.id === r.worker_id)?.name || "—";
-            html += `<tr><td>${wname}</td><td><span class="badge ${STA_BADGE[r.type] || "b-ok"}">${STA_LABEL[r.type] || r.type}</span></td><td style="white-space:nowrap">${fmtDate(r.date_from)} → ${fmtDate(r.date_to)}</td><td style="color:var(--mut);font-size:.75rem">${r.notes || ""}</td></tr>`;
+            const tipHtml = r.fromShift
+              ? renderStatusBadge(r.tip, r.trOre)
+              : `<span class="badge ${r.tipBadge}">${r.tipLabel}</span>`;
+            html += `<tr><td>${wname}</td><td>${tipHtml}</td><td style="white-space:nowrap">${r.perioada}</td><td style="color:var(--mut);font-size:.75rem">${r.notes}</td></tr>`;
           });
           html += `</tbody></table>`;
         }
