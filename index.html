@@ -1314,6 +1314,7 @@
                   <th>Ture zi</th>
                   <th>Ture noapte</th>
                   <th>Ore lucrate</th>
+                  <th>Reportate prec.</th>
                   <th>S.D.S.L.</th>
                   <th>Normă</th>
                   <th>Ore supl.</th>
@@ -2654,6 +2655,73 @@
         if (prev) s.value = prev;
       }
 
+      // Calculeaza orele suplimentare reportate din luna precedenta pentru un lucrator,
+      // cu propagare corecta pe max 3 luni in urma (identic cu logica din tab Situatie).
+      async function calcOreReportate(wid, worker, year, month) {
+        try {
+          const luniDeAnalizat = [];
+          let cM = month, cY = year;
+          for (let d = 0; d < 3; d++) {
+            cM = cM === 1 ? 12 : cM - 1;
+            if (cM === 12) cY--;
+            luniDeAnalizat.unshift({ y: cY, m: cM });
+          }
+          let surplusAnterior = 0;
+          for (const { y: lY, m: lM } of luniDeAnalizat) {
+            const lFrom = `${lY}-${String(lM).padStart(2, "0")}-01`;
+            const lLast = new Date(lY, lM, 0).getDate();
+            const lTo = `${lY}-${String(lM).padStart(2, "0")}-${lLast}`;
+            const { data: lShifts } = await sb
+              .from("shifts").select("*")
+              .eq("worker_id", wid)
+              .gte("date", lFrom).lte("date", lTo);
+            const { data: lRaspAll } = await sb
+              .from("raspandiri").select("*")
+              .eq("worker_id", wid);
+            const lRasp = (lRaspAll || []).filter(
+              (r) => r.date_from <= lTo && r.date_to >= lFrom,
+            );
+            const lPrevLastDay = prevDay(lFrom);
+            const { data: lNightCarry } = await sb
+              .from("shifts").select("*")
+              .eq("worker_id", wid)
+              .eq("date", lPrevLastDay)
+              .eq("shift_type", "noapte");
+            let lOre = 0;
+            (lShifts || []).forEach((s) => {
+              if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+              if (isRaspZeroOre(s.date, lRasp)) return;
+              let h = parseFloat(s.hours) || 0;
+              if (s.shift_type === "noapte") {
+                const endDs = nextDay(s.date);
+                const endMonth = parseInt(endDs.substring(5, 7));
+                const endYear = parseInt(endDs.substring(0, 4));
+                if (endMonth !== lM || endYear !== lY) {
+                  const { hOnStart } = splitNightShift(s);
+                  h = hOnStart;
+                }
+              }
+              lOre += h;
+            });
+            (lNightCarry || []).forEach((s) => {
+              if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
+              const endDs = nextDay(s.date);
+              if (endDs !== lFrom) return;
+              if (isRaspZeroOre(endDs, lRasp)) return;
+              const { hOnEnd } = splitNightShift(s);
+              if (hOnEnd > 0) lOre += hOnEnd;
+            });
+            const lNorm = getWorkerNorm(worker, lY, lM, lRasp);
+            const lSupl = lOre + surplusAnterior - lNorm;
+            surplusAnterior = lSupl > 0 ? Math.round(lSupl * 10) / 10 : 0;
+          }
+          return surplusAnterior;
+        } catch (e) {
+          console.error("Eroare calcOreReportate:", e);
+          return 0;
+        }
+      }
+
       async function loadSituatie() {
         const wid = document.getElementById("sit-w").value;
         const month = parseInt(document.getElementById("sit-m").value);
@@ -2703,78 +2771,7 @@
           (r) => r.date_from <= to && r.date_to >= from,
         );
 
-        // Calcul ore reportate din luna precedenta — iterativ, cu adancime maxima 3 luni
-        let oreReportate = 0;
-        try {
-          // Construim lista celor 3 luni precedente in ordine cronologica (cea mai veche prima)
-          const luniDeAnalizat = [];
-          let cM = month, cY = year;
-          for (let d = 0; d < 3; d++) {
-            cM = cM === 1 ? 12 : cM - 1;
-            if (cM === 12 && d > 0) cY--;
-            else if (cM === 12) cY--;
-            luniDeAnalizat.unshift({ y: cY, m: cM });
-          }
-          // Calculam surplusul iterativ de la cea mai veche luna spre cea mai recenta
-          let surplusAnterior = 0;
-          for (const { y: lY, m: lM } of luniDeAnalizat) {
-            const lFrom = `${lY}-${String(lM).padStart(2, "0")}-01`;
-            const lLast = new Date(lY, lM, 0).getDate();
-            const lTo = `${lY}-${String(lM).padStart(2, "0")}-${lLast}`;
-            const { data: lShifts } = await sb
-              .from("shifts")
-              .select("*")
-              .eq("worker_id", wid)
-              .gte("date", lFrom)
-              .lte("date", lTo);
-            const { data: lRaspAll } = await sb
-              .from("raspandiri")
-              .select("*")
-              .eq("worker_id", wid);
-            const lRasp = (lRaspAll || []).filter(
-              (r) => r.date_from <= lTo && r.date_to >= lFrom,
-            );
-            // Carry-in: tura noapte din ultima zi a lunii precedente
-            const lPrevLastDay = prevDay(lFrom);
-            const { data: lNightCarry } = await sb
-              .from("shifts")
-              .select("*")
-              .eq("worker_id", wid)
-              .eq("date", lPrevLastDay)
-              .eq("shift_type", "noapte");
-            let lOre = 0;
-            (lShifts || []).forEach((s) => {
-              if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
-              if (isRaspZeroOre(s.date, lRasp)) return;
-              let h = parseFloat(s.hours) || 0;
-              if (s.shift_type === "noapte") {
-                const endDs = nextDay(s.date);
-                const endMonth = parseInt(endDs.substring(5, 7));
-                const endYear = parseInt(endDs.substring(0, 4));
-                if (endMonth !== lM || endYear !== lY) {
-                  const { hOnStart } = splitNightShift(s);
-                  h = hOnStart;
-                }
-              }
-              lOre += h;
-            });
-            (lNightCarry || []).forEach((s) => {
-              if (ZERO_ORE.includes(s.status) || s.status === "absent") return;
-              const endDs = nextDay(s.date);
-              if (endDs !== lFrom) return;
-              if (isRaspZeroOre(endDs, lRasp)) return;
-              const { hOnEnd } = splitNightShift(s);
-              if (hOnEnd > 0) lOre += hOnEnd;
-            });
-            const lNorm = getWorkerNorm(worker, lY, lM, lRasp);
-            const lSupl = lOre + surplusAnterior - lNorm;
-            surplusAnterior = lSupl > 0 ? Math.round(lSupl * 10) / 10 : 0;
-          }
-          oreReportate = surplusAnterior;
-        } catch (e) {
-          console.error("Eroare calcul ore reportate:", e);
-          oreReportate = 0;
-        }
+        const oreReportate = await calcOreReportate(wid, worker, year, month);
 
         renderSituatie(
           worker,
@@ -4638,7 +4635,7 @@
         const last = new Date(year, month, 0).getDate();
         const to = `${year}-${String(month).padStart(2, "0")}-${last}`;
         document.getElementById("rap-tbody").innerHTML =
-          '<tr><td colspan="10" class="empty-state"><div class="spinner"></div></td></tr>';
+          '<tr><td colspan="11" class="empty-state"><div class="spinner"></div></td></tr>';
         const { data: shifts } = await sb
           .from("shifts")
           .select("*")
@@ -4739,6 +4736,15 @@
         });
 
         let totalSdslAlert = false;
+
+        // Calcul ore reportate per worker folosind aceeasi functie ca tab-ul Situatie
+        const oreReportateByWorker = {};
+        await Promise.all(
+          activeW.map(async (w) => {
+            oreReportateByWorker[w.id] = await calcOreReportate(w.id, w, year, month);
+          })
+        );
+
         const rows = activeW
           .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
           .map((w) => {
@@ -4747,7 +4753,8 @@
             const d = byW[w.id];
             const total =
               (d?.oreZi || 0) + (d?.oreNoapte || 0) + (d?.oreC || 0);
-            const supl = total - norm;
+            const oreRep = oreReportateByWorker[w.id] || 0;
+            const supl = total + oreRep - norm;
             const sdslH = d?.sdsl || 0;
             const maxS = norm * 0.4;
             const pct = norm ? Math.min((total / norm) * 100, 100) : 0;
@@ -4759,6 +4766,7 @@
       <td>${d?.tureZi || 0}</td>
       <td>${d?.tureNoapte || 0}</td>
       <td><strong>${total}</strong></td>
+      <td style="color:${oreRep > 0 ? "var(--ok)" : "var(--mut)"}">${oreRep > 0 ? "+" : ""}${oreRep}</td>
       <td><span class="badge ${sdslH > maxS ? "b-err" : sdslH > maxS * 0.8 ? "b-co" : "b-sdsl"}">${sdslH}h / max ${Math.round(maxS)}h</span></td>
       <td>${norm}</td>
       <td style="color:${supl >= 0 ? "var(--ok)" : "var(--err)"}">${supl >= 0 ? "+" : ""}${Math.round(supl * 10) / 10}</td>
