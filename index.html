@@ -2514,11 +2514,7 @@
 
       /* ── LOADERS ── */
       async function loadWorkers() {
-        const { data } = await sb
-          .from("workers")
-          .select("*")
-          .order("order_nr", { nullsFirst: false })
-          .order("name");
+        const { data } = await sb.from("workers").select("*").order("name");
         allWorkers = data || [];
       }
       async function loadNormaOv() {
@@ -2706,9 +2702,12 @@
 
         const renderGrp = (ttl, arr, isEnd = false) => {
           if (!arr.length) return "";
+          const sorted = [...arr].sort((a, b) =>
+            (a.workers?.name || "").localeCompare(b.workers?.name || "", "ro"),
+          );
           let s = `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">${ttl}</div>`;
           s += `<table class="stbl"><thead><tr><th>Lucrător</th><th>Interval</th><th>Ore</th><th>S.D.S.L.</th><th>Serviciu</th><th>Status</th><th>Note</th></tr></thead><tbody>`;
-          arr.forEach((sh) => {
+          sorted.forEach((sh) => {
             const st = sh.status || "prezent";
             const stLbl = STA_LABEL[st] || st;
             const stCls = STA_BADGE[st] || "b-ok";
@@ -2763,9 +2762,14 @@
 
         // Răspândiri
         if (rasp.length) {
+          const raspSorted = [...rasp].sort((a, b) => {
+            const na = allWorkers.find((w) => w.id === a.worker_id)?.name || "";
+            const nb = allWorkers.find((w) => w.id === b.worker_id)?.name || "";
+            return na.localeCompare(nb, "ro");
+          });
           html += `<div style="font-size:.78rem;color:var(--mut);margin:.65rem 0 .35rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Răspândiri / Libere</div>`;
           html += `<table class="stbl"><thead><tr><th>Lucrător</th><th>Tip</th><th>Perioadă</th><th>Note</th></tr></thead><tbody>`;
-          rasp.forEach((r) => {
+          raspSorted.forEach((r) => {
             const wname =
               allWorkers.find((w) => w.id === r.worker_id)?.name || "—";
             html += `<tr><td>${wname}</td><td><span class="badge ${STA_BADGE[r.type] || "b-ok"}">${STA_LABEL[r.type] || r.type}</span></td><td style="white-space:nowrap">${fmtDate(r.date_from)} → ${fmtDate(r.date_to)}</td><td style="color:var(--mut);font-size:.75rem">${r.notes || ""}</td></tr>`;
@@ -2849,11 +2853,7 @@
           : '<option value="">— Selectează —</option>';
         allWorkers
           .filter((w) => w.status === "activ" || !w.status)
-          .sort(
-            (a, b) =>
-              (a.order_nr || 99) - (b.order_nr || 99) ||
-              a.name.localeCompare(b.name),
-          )
+          .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .forEach((w) => {
             const o = document.createElement("option");
             o.value = w.id;
@@ -3361,9 +3361,9 @@
         html += `</tr></thead><tbody>`;
         allWorkers
           .filter((w) => w.status === "activ" || !w.status)
-          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .forEach((w) => {
-            html += `<tr><td class="name-col">${w.name}<br><span style="font-size:.65rem;color:var(--mut)">${w.grad || ""}</span></td>`;
+            html += `<tr><td class="name-col">${w.grad ? `<span style="font-size:.65rem;color:var(--mut);display:block">${w.grad}</span>` : ""}${w.name}</td>`;
             for (let d = 1; d <= days; d++) {
               const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
               const sh = (shifts || []).find(
@@ -3859,7 +3859,7 @@
         // Tabel lucrători activi cu situația lor
         const activeW = allWorkers
           .filter((w) => w.status === "activ" || !w.status)
-          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99));
+          .sort((a, b) => a.name.localeCompare(b.name, "ro"));
         html += `<div class="tw"><table class="stbl"><thead><tr><th>Nr.</th><th>Lucrător</th><th>Grad</th><th>Tip tură</th><th>Interval</th><th>Ore</th><th>S.D.S.L.</th><th>Serviciu</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>`;
 
         activeW.forEach((w) => {
@@ -4639,9 +4639,9 @@
         html += `</tr></thead><tbody>`;
         allWorkers
           .filter((w) => w.status === "activ" || !w.status)
-          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .forEach((w) => {
-            html += `<tr><td class="name-col">${w.name}</td>`;
+            html += `<tr><td class="name-col">${w.grad ? `<span style="font-size:.65rem;color:var(--mut);display:block">${w.grad}</span>` : ""}${w.name}</td>`;
             for (let d = 1; d <= days; d++) {
               const ds = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
               const sh = (shifts || []).find(
@@ -4978,7 +4978,7 @@
         );
 
         const rows = activeW
-          .sort((a, b) => (a.order_nr || 99) - (b.order_nr || 99))
+          .sort((a, b) => a.name.localeCompare(b.name, "ro"))
           .map((w) => {
             const wRasp = (rasp || []).filter((r) => r.worker_id === w.id);
             const norm = getWorkerNorm(w, year, month, wRasp);
