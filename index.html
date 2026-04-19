@@ -919,6 +919,9 @@
             Autentificare
           </button>
           <div id="li-msg" class="amsg"></div>
+          <div class="a-toggle" style="margin-top: 0.75rem">
+            <a onclick="showForgot()">Ai uitat parola?</a>
+          </div>
           <div class="a-toggle">
             Nu ai cont? <a onclick="showReg()">Înregistrare</a>
           </div>
@@ -941,6 +944,67 @@
           <div class="a-toggle">
             Ai cont? <a onclick="showLogin()">Autentificare</a>
           </div>
+        </div>
+
+        <!-- FORGOT PASSWORD -->
+        <div id="auth-forgot" style="display: none">
+          <div
+            style="
+              color: var(--mut);
+              font-size: 0.82rem;
+              margin-bottom: 1.2rem;
+              line-height: 1.5;
+            "
+          >
+            Introdu adresa de email asociată contului tău. Vei primi un link
+            pentru resetarea parolei.
+          </div>
+          <label>Email</label
+          ><input
+            type="email"
+            id="fp-email"
+            placeholder="utilizator@exemplu.ro"
+            autocomplete="email"
+          />
+          <button class="btn btn-primary" onclick="doForgotPassword()">
+            Trimite link de resetare
+          </button>
+          <div id="fp-msg" class="amsg"></div>
+          <div class="a-toggle">
+            <a onclick="showLogin()">← Înapoi la autentificare</a>
+          </div>
+        </div>
+
+        <!-- RESET PASSWORD (după click pe linkul din email) -->
+        <div id="auth-reset" style="display: none">
+          <div
+            style="
+              color: var(--mut);
+              font-size: 0.82rem;
+              margin-bottom: 1.2rem;
+              line-height: 1.5;
+            "
+          >
+            Alege o parolă nouă pentru contul tău.
+          </div>
+          <label>Parolă nouă</label
+          ><input
+            type="password"
+            id="rp-pass"
+            placeholder="Min. 6 caractere"
+            autocomplete="new-password"
+          />
+          <label>Confirmă parola nouă</label
+          ><input
+            type="password"
+            id="rp-pass2"
+            placeholder="Repetă parola"
+            autocomplete="new-password"
+          />
+          <button class="btn btn-primary" onclick="doResetPassword()">
+            Salvează parola nouă
+          </button>
+          <div id="rp-msg" class="amsg"></div>
         </div>
       </div>
     </div>
@@ -1596,23 +1660,80 @@
           />
         </div>
         <!-- SPLIT ORE TURĂ NOAPTE — vizibil doar pentru tip=noapte, doar admin -->
-        <div id="ms-night-split-row" style="display:none; margin-top:.6rem; padding:.7rem .85rem; background:#6e3bb511; border:1px dashed var(--ngt); border-radius:var(--r)">
-          <div style="font-size:.75rem; color:#b794f4; font-weight:600; margin-bottom:.5rem">🌙 Distribuție ore tură noapte</div>
+        <div
+          id="ms-night-split-row"
+          style="
+            display: none;
+            margin-top: 0.6rem;
+            padding: 0.7rem 0.85rem;
+            background: #6e3bb511;
+            border: 1px dashed var(--ngt);
+            border-radius: var(--r);
+          "
+        >
+          <div
+            style="
+              font-size: 0.75rem;
+              color: #b794f4;
+              font-weight: 600;
+              margin-bottom: 0.5rem;
+            "
+          >
+            🌙 Distribuție ore tură noapte
+          </div>
           <div class="fr3">
             <div>
-              <label style="color:#b794f4">Înainte de 00:00 <span style="color:var(--mut);font-weight:400">(seara)</span></label>
-              <input type="number" id="ms-night-pre" min="0" max="12" step="0.5" placeholder="4" oninput="onNightSplitChange('pre')" />
+              <label style="color: #b794f4"
+                >Înainte de 00:00
+                <span style="color: var(--mut); font-weight: 400"
+                  >(seara)</span
+                ></label
+              >
+              <input
+                type="number"
+                id="ms-night-pre"
+                min="0"
+                max="12"
+                step="0.5"
+                placeholder="4"
+                oninput="onNightSplitChange('pre')"
+              />
             </div>
             <div>
-              <label style="color:#b794f4">După 00:00 <span style="color:var(--mut);font-weight:400">(dimineața)</span></label>
-              <input type="number" id="ms-night-post" min="0" max="12" step="0.5" placeholder="8" oninput="onNightSplitChange('post')" />
+              <label style="color: #b794f4"
+                >După 00:00
+                <span style="color: var(--mut); font-weight: 400"
+                  >(dimineața)</span
+                ></label
+              >
+              <input
+                type="number"
+                id="ms-night-post"
+                min="0"
+                max="12"
+                step="0.5"
+                placeholder="8"
+                oninput="onNightSplitChange('post')"
+              />
             </div>
             <div>
-              <label style="color:var(--mut)">Total ore (auto)</label>
-              <input type="number" id="ms-night-total" min="0" max="24" step="0.5" placeholder="12" readonly style="opacity:.6;cursor:default" />
+              <label style="color: var(--mut)">Total ore (auto)</label>
+              <input
+                type="number"
+                id="ms-night-total"
+                min="0"
+                max="24"
+                step="0.5"
+                placeholder="12"
+                readonly
+                style="opacity: 0.6; cursor: default"
+              />
             </div>
           </div>
-          <div id="ms-night-split-info" style="font-size:.72rem;color:var(--mut);margin-top:.4rem"></div>
+          <div
+            id="ms-night-split-info"
+            style="font-size: 0.72rem; color: var(--mut); margin-top: 0.4rem"
+          ></div>
         </div>
         <label>Serviciu</label>
         <select id="ms-serviciu">
@@ -2116,6 +2237,27 @@
       /* ── INIT ── */
       window.addEventListener("DOMContentLoaded", async () => {
         sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Detectează dacă URL-ul conține un token de resetare parolă (hash trimis de Supabase)
+        const hash = window.location.hash;
+        if (hash && hash.includes("type=recovery")) {
+          // Supabase parsează automat hash-ul și creează o sesiune temporară
+          const {
+            data: { session: recoverSession },
+          } = await sb.auth.getSession();
+          if (recoverSession) {
+            showReset();
+            return;
+          }
+        }
+
+        // Ascultă și evenimentul auth în timp real (pentru redirect după email)
+        sb.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY") {
+            showReset();
+          }
+        });
+
         const {
           data: { session },
         } = await sb.auth.getSession();
@@ -2123,13 +2265,79 @@
       });
 
       /* ── AUTH ── */
+      function showAllPanels() {
+        ["auth-login", "auth-reg", "auth-forgot", "auth-reset"].forEach(
+          (id) => {
+            document.getElementById(id).style.display = "none";
+          },
+        );
+      }
       function showReg() {
-        document.getElementById("auth-login").style.display = "none";
+        showAllPanels();
         document.getElementById("auth-reg").style.display = "block";
       }
       function showLogin() {
-        document.getElementById("auth-reg").style.display = "none";
+        showAllPanels();
         document.getElementById("auth-login").style.display = "block";
+      }
+      function showForgot() {
+        showAllPanels();
+        document.getElementById("auth-forgot").style.display = "block";
+      }
+      function showReset() {
+        showAllPanels();
+        document.getElementById("auth-reset").style.display = "block";
+      }
+      async function doForgotPassword() {
+        const email = document.getElementById("fp-email").value.trim();
+        const msg = document.getElementById("fp-msg");
+        if (!email) {
+          msg.className = "amsg err";
+          msg.textContent = "Introdu adresa de email.";
+          return;
+        }
+        msg.className = "amsg";
+        msg.textContent = "Se trimite...";
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.href.split("?")[0].split("#")[0],
+        });
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        msg.className = "amsg ok";
+        msg.textContent =
+          "Email trimis! Verifică căsuța poștală (inclusiv spam) și apasă linkul primit.";
+      }
+      async function doResetPassword() {
+        const pass = document.getElementById("rp-pass").value;
+        const pass2 = document.getElementById("rp-pass2").value;
+        const msg = document.getElementById("rp-msg");
+        if (pass.length < 6) {
+          msg.className = "amsg err";
+          msg.textContent = "Parola trebuie să aibă minim 6 caractere.";
+          return;
+        }
+        if (pass !== pass2) {
+          msg.className = "amsg err";
+          msg.textContent = "Parolele nu coincid.";
+          return;
+        }
+        msg.className = "amsg";
+        msg.textContent = "Se salvează...";
+        const { error } = await sb.auth.updateUser({ password: pass });
+        if (error) {
+          msg.className = "amsg err";
+          msg.textContent = error.message;
+          return;
+        }
+        msg.className = "amsg ok";
+        msg.textContent = "Parolă schimbată cu succes! Redirecționare...";
+        setTimeout(async () => {
+          await sb.auth.signOut();
+          showLogin();
+        }, 2000);
       }
       async function doLogin() {
         const msg = document.getElementById("li-msg");
@@ -2660,7 +2868,8 @@
       async function calcOreReportate(wid, worker, year, month) {
         try {
           const luniDeAnalizat = [];
-          let cM = month, cY = year;
+          let cM = month,
+            cY = year;
           for (let d = 0; d < 3; d++) {
             cM = cM === 1 ? 12 : cM - 1;
             if (cM === 12) cY--;
@@ -2672,18 +2881,22 @@
             const lLast = new Date(lY, lM, 0).getDate();
             const lTo = `${lY}-${String(lM).padStart(2, "0")}-${lLast}`;
             const { data: lShifts } = await sb
-              .from("shifts").select("*")
+              .from("shifts")
+              .select("*")
               .eq("worker_id", wid)
-              .gte("date", lFrom).lte("date", lTo);
+              .gte("date", lFrom)
+              .lte("date", lTo);
             const { data: lRaspAll } = await sb
-              .from("raspandiri").select("*")
+              .from("raspandiri")
+              .select("*")
               .eq("worker_id", wid);
             const lRasp = (lRaspAll || []).filter(
               (r) => r.date_from <= lTo && r.date_to >= lFrom,
             );
             const lPrevLastDay = prevDay(lFrom);
             const { data: lNightCarry } = await sb
-              .from("shifts").select("*")
+              .from("shifts")
+              .select("*")
               .eq("worker_id", wid)
               .eq("date", lPrevLastDay)
               .eq("shift_type", "noapte");
@@ -3871,13 +4084,16 @@
               }
               // Split ore tură noapte (admin only)
               if (sh.shift_type === "noapte" && CP?.role === "admin") {
-                document.getElementById("ms-night-split-row").style.display = "block";
+                document.getElementById("ms-night-split-row").style.display =
+                  "block";
                 const { hOnStart, hOnEnd } = splitNightShift(sh);
                 document.getElementById("ms-night-pre").value = hOnStart;
                 document.getElementById("ms-night-post").value = hOnEnd;
-                document.getElementById("ms-night-total").value = Math.round((hOnStart + hOnEnd) * 10) / 10;
+                document.getElementById("ms-night-total").value =
+                  Math.round((hOnStart + hOnEnd) * 10) / 10;
               } else {
-                document.getElementById("ms-night-split-row").style.display = "none";
+                document.getElementById("ms-night-split-row").style.display =
+                  "none";
               }
               onMsChange();
             }, 60);
@@ -3901,7 +4117,7 @@
         } else sdslEl.style.display = "none";
         if (type === "noapte") {
           const nd = nextDay(date);
-          nEl.innerHTML = `🌙 ${fmtDate(date)} ${document.getElementById("ms-start").value||"20:00"} → ${fmtDate(nd)} ${document.getElementById("ms-end").value||"08:00"}${isSdsl(nd) ? ` <span style="color:var(--wrn)">(a doua zi: ${isHol(nd) || "weekend"})</span>` : ""}`;
+          nEl.innerHTML = `🌙 ${fmtDate(date)} ${document.getElementById("ms-start").value || "20:00"} → ${fmtDate(nd)} ${document.getElementById("ms-end").value || "08:00"}${isSdsl(nd) ? ` <span style="color:var(--wrn)">(a doua zi: ${isHol(nd) || "weekend"})</span>` : ""}`;
           nEl.style.display = "block";
           // Refresh night split info text
           onNightSplitChange(null);
@@ -3926,13 +4142,15 @@
           type === "custom" ? "grid" : "none";
         // Night split row vizibil doar pentru admin + tip noapte
         document.getElementById("ms-night-split-row").style.display =
-          (type === "noapte" && CP?.role === "admin") ? "block" : "none";
+          type === "noapte" && CP?.role === "admin" ? "block" : "none";
         onMsChange();
       }
 
       function onNightSplitChange(which) {
-        const pre = parseFloat(document.getElementById("ms-night-pre").value) || 0;
-        const post = parseFloat(document.getElementById("ms-night-post").value) || 0;
+        const pre =
+          parseFloat(document.getElementById("ms-night-pre").value) || 0;
+        const post =
+          parseFloat(document.getElementById("ms-night-post").value) || 0;
         const total = Math.round((pre + post) * 10) / 10;
         document.getElementById("ms-night-total").value = total || "";
         // Dacă e apelat de utilizator (nu refresh automat din onMsChange), sincronizăm orele și timpii
@@ -3944,7 +4162,7 @@
             const sh = Math.floor(startTotalMin / 60) % 24;
             const sm = startTotalMin % 60;
             document.getElementById("ms-start").value =
-              `${String(sh).padStart(2,"0")}:${String(sm).padStart(2,"0")}`;
+              `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
           }
           // Ora de end: post ore după miezul nopții
           if (post >= 0 && post <= 12) {
@@ -3952,7 +4170,7 @@
             const eh = Math.floor(endTotalMin / 60);
             const em = endTotalMin % 60;
             document.getElementById("ms-end").value =
-              `${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`;
+              `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
           }
         }
         // Info text — folosim valorile curente din câmpurile start/end
@@ -3962,8 +4180,12 @@
         const endVal = document.getElementById("ms-end").value || "08:00";
         if (date && (pre > 0 || post > 0)) {
           const nd = nextDay(date);
-          const sdslPre = isSdsl(date) ? ' <span style="color:var(--wrn)">★SDSL</span>' : "";
-          const sdslPost = isSdsl(nd) ? ' <span style="color:var(--wrn)">★SDSL</span>' : "";
+          const sdslPre = isSdsl(date)
+            ? ' <span style="color:var(--wrn)">★SDSL</span>'
+            : "";
+          const sdslPost = isSdsl(nd)
+            ? ' <span style="color:var(--wrn)">★SDSL</span>'
+            : "";
           infoEl.innerHTML = `${fmtDate(date)} ${startVal}–00:00 (<strong>${pre}h</strong>${sdslPre}) | ${fmtDate(nd)} 00:00–${endVal} (<strong>${post}h</strong>${sdslPost})`;
         } else {
           infoEl.textContent = "";
@@ -4007,7 +4229,9 @@
         // Validare split ore tură noapte
         if (shiftType === "noapte" && CP?.role === "admin") {
           const pre = parseFloat(document.getElementById("ms-night-pre").value);
-          const post = parseFloat(document.getElementById("ms-night-post").value);
+          const post = parseFloat(
+            document.getElementById("ms-night-post").value,
+          );
           if (!isNaN(pre) && !isNaN(post)) {
             if (pre < 0 || post < 0) {
               msg.className = "amsg err";
@@ -4016,7 +4240,8 @@
             }
             if (pre + post > 24) {
               msg.className = "amsg err";
-              msg.textContent = "Suma orelor (înainte + după miezul nopții) nu poate depăși 24h.";
+              msg.textContent =
+                "Suma orelor (înainte + după miezul nopții) nu poate depăși 24h.";
               return;
             }
           }
@@ -4064,7 +4289,9 @@
         // Dacă e tură noapte și admin, recalculăm din split
         if (shiftType === "noapte" && CP?.role === "admin") {
           const pre = parseFloat(document.getElementById("ms-night-pre").value);
-          const post = parseFloat(document.getElementById("ms-night-post").value);
+          const post = parseFloat(
+            document.getElementById("ms-night-post").value,
+          );
           if (!isNaN(pre) && !isNaN(post) && (pre > 0 || post > 0)) {
             const totalH = Math.round((pre + post) * 10) / 10;
             payload.hours = ZERO_ORE.includes(status) ? 0 : totalH;
@@ -4073,14 +4300,14 @@
               const startTotalMin = Math.round((24 - pre) * 60);
               const sh = Math.floor(startTotalMin / 60) % 24;
               const sm = startTotalMin % 60;
-              payload.start_time = `${String(sh).padStart(2,"0")}:${String(sm).padStart(2,"0")}`;
+              payload.start_time = `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
             }
             // end_time: post ore după miezul nopții (ex: 8h → 08:00, 7.5h → 07:30)
             if (post >= 0 && post <= 12) {
               const endTotalMin = Math.round(post * 60);
               const eh = Math.floor(endTotalMin / 60);
               const em = endTotalMin % 60;
-              payload.end_time = `${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`;
+              payload.end_time = `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
             }
           }
         }
@@ -4741,8 +4968,13 @@
         const oreReportateByWorker = {};
         await Promise.all(
           activeW.map(async (w) => {
-            oreReportateByWorker[w.id] = await calcOreReportate(w.id, w, year, month);
-          })
+            oreReportateByWorker[w.id] = await calcOreReportate(
+              w.id,
+              w,
+              year,
+              month,
+            );
+          }),
         );
 
         const rows = activeW
