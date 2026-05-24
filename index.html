@@ -565,10 +565,20 @@
         background: var(--surf);
         padding: 0.35rem 0.2rem;
         text-align: center;
-        min-height: 54px;
+        min-height: 72px;
         font-size: 0.72rem;
         position: relative;
       }
+      .wcd-det {
+        font-size: 0.55rem;
+        color: var(--mut);
+        line-height: 1.35;
+        margin-top: 2px;
+        overflow: hidden;
+      }
+      .wcd-det .wdd-int { color: #8b949e; display: block; }
+      .wcd-det .wdd-srv { color: #79c0ff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wcd-det .wdd-note { color: #e3b341; font-style: italic; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .wcd.empty {
         background: var(--bg);
       }
@@ -3137,7 +3147,10 @@
         const cm = zileDinLuna("cm");
         const del = zileDinLuna("delegare");
         const inv = zileDinLuna("invoire");
-        const maxSdsl = norm * 0.4;
+        // Limita SDSL 40% se aplica intotdeauna fata de norma completa lunara (8*zile_lucratoare),
+        // indiferent de norma individuala redusa prin CO/CM/invoiri etc.
+        const normCompleta = (worker.daily_norm || 8) * getWorkingDays(year, month);
+        const maxSdsl = normCompleta * 0.4;
         const sdslPct = maxSdsl ? Math.round((oreSdsl / maxSdsl) * 100) : 0;
 
         let html = `
@@ -3239,6 +3252,18 @@
               html += `<div style="font-size:.58rem;color:var(--mut)">${sh.hours}h</div>`;
             const sdslO = calcSdslOre(sh);
             if (sdslO > 0) html += `<div class="wc-sdsl">S.D.S.L</div>`;
+            // Detalii tură: interval orar, serviciu, note
+            if (!ZERO_ORE.includes(sh.status) && sh.status !== "absent") {
+              let detHtml = '<div class="wcd-det">';
+              if (sh.start_time && sh.end_time) {
+                const isNightDet = sh.shift_type === "noapte";
+                detHtml += `<span class="wdd-int">${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)}${isNightDet ? "+1" : ""}</span>`;
+              }
+              if (sh.serviciu) detHtml += `<span class="wdd-srv">${sh.serviciu}</span>`;
+              if (sh.notes) detHtml += `<span class="wdd-note">${sh.notes}</span>`;
+              detHtml += '</div>';
+              if (sh.start_time || sh.serviciu || sh.notes) html += detHtml;
+            }
             if (sh.shift_type === "noapte")
               html += `<div class="wc-nbar"></div>`;
             const isOwn =
@@ -5034,7 +5059,8 @@
             const oreRep = oreReportateByWorker[w.id] || 0;
             const supl = total + oreRep - norm;
             const sdslH = d?.sdsl || 0;
-            const maxS = norm * 0.4;
+            // Limita SDSL 40% fata de norma completa (8*zile_lucratoare), nu norma individuala redusa
+            const maxS = (w.daily_norm || 8) * wdFull * 0.4;
             const pct = norm ? Math.min((total / norm) * 100, 100) : 0;
             if (sdslH > maxS) totalSdslAlert = true;
             return `<tr>
