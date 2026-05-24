@@ -552,14 +552,20 @@
         margin-top: 0.15rem;
       }
       /* WORKER CAL */
+      .wc-grid-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--rl);
+        border: 1px solid var(--brd);
+      }
       .wc-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, minmax(72px, 1fr));
         gap: 2px;
         background: var(--brd);
         border-radius: var(--rl);
         overflow: hidden;
-        border: 1px solid var(--brd);
+        min-width: 504px;
       }
       .wcd {
         background: var(--surf);
@@ -3192,7 +3198,7 @@
         });
 
         html += `<hr class="dvd"><div style="font-size:.82rem;font-weight:600;margin-bottom:.65rem">Calendar ${MRO[month - 1]} ${year}</div>`;
-        html += `<div class="wc-grid">`;
+        html += `<div class="wc-grid-wrap"><div class="wc-grid">`;
         ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].forEach((d) => {
           html += `<div class="cal-dow" style="font-size:.68rem;padding:.3rem 0">${d}</div>`;
         });
@@ -3281,7 +3287,7 @@
           }
           html += `</div>`;
         }
-        html += `</div>`;
+        html += `</div></div>`;
 
         // Răspândiri list - adaugam si tura carry noapte info
         if (nightCarry && nightCarry.length > 0) {
