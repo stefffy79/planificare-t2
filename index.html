@@ -582,9 +582,25 @@
         margin-top: 2px;
         overflow: hidden;
       }
-      .wcd-det .wdd-int { color: #8b949e; display: block; }
-      .wcd-det .wdd-srv { color: #79c0ff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .wcd-det .wdd-note { color: #e3b341; font-style: italic; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wcd-det .wdd-int {
+        color: #8b949e;
+        display: block;
+      }
+      .wcd-det .wdd-srv {
+        color: #79c0ff;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .wcd-det .wdd-note {
+        color: #e3b341;
+        font-style: italic;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .wcd.empty {
         background: var(--bg);
       }
@@ -2916,14 +2932,16 @@
         if (prev) s.value = prev;
       }
 
-      // Calculeaza orele suplimentare reportate din luna precedenta pentru un lucrator,
-      // cu propagare corecta pe max 3 luni in urma (identic cu logica din tab Situatie).
+      // Calculeaza orele suplimentare reportate din luna precedenta pentru un lucrator.
+      // Foloseste aceeasi formula recursiva ca renderSituatie:
+      //   oreSupl(luna) = total_ore(luna) + oreSupl(luna-1) - norma(luna)
+      // Fereastra de 12 luni asigura ca surplusul propagat corect indiferent de adancime.
       async function calcOreReportate(wid, worker, year, month) {
         try {
           const luniDeAnalizat = [];
           let cM = month,
             cY = year;
-          for (let d = 0; d < 3; d++) {
+          for (let d = 0; d < 12; d++) {
             cM = cM === 1 ? 12 : cM - 1;
             if (cM === 12) cY--;
             luniDeAnalizat.unshift({ y: cY, m: cM });
@@ -3155,7 +3173,8 @@
         const inv = zileDinLuna("invoire");
         // Limita SDSL 40% se aplica intotdeauna fata de norma completa lunara (8*zile_lucratoare),
         // indiferent de norma individuala redusa prin CO/CM/invoiri etc.
-        const normCompleta = (worker.daily_norm || 8) * getWorkingDays(year, month);
+        const normCompleta =
+          (worker.daily_norm || 8) * getWorkingDays(year, month);
         const maxSdsl = normCompleta * 0.4;
         const sdslPct = maxSdsl ? Math.round((oreSdsl / maxSdsl) * 100) : 0;
 
@@ -3265,9 +3284,11 @@
                 const isNightDet = sh.shift_type === "noapte";
                 detHtml += `<span class="wdd-int">${fmtTime(sh.start_time)}–${fmtTime(sh.end_time)}${isNightDet ? "+1" : ""}</span>`;
               }
-              if (sh.serviciu) detHtml += `<span class="wdd-srv">${sh.serviciu}</span>`;
-              if (sh.notes) detHtml += `<span class="wdd-note">${sh.notes}</span>`;
-              detHtml += '</div>';
+              if (sh.serviciu)
+                detHtml += `<span class="wdd-srv">${sh.serviciu}</span>`;
+              if (sh.notes)
+                detHtml += `<span class="wdd-note">${sh.notes}</span>`;
+              detHtml += "</div>";
               if (sh.start_time || sh.serviciu || sh.notes) html += detHtml;
             }
             if (sh.shift_type === "noapte")
