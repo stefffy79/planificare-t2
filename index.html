@@ -19,7 +19,7 @@
         --acc: #f0a500;
         --acc2: #e36209;
         --day: #1f6feb;
-        --ngt: #6e3bb5;
+        --ngt: #0c0b0d;
         --ok: #2ea043;
         --err: #da3633;
         --wrn: #d29922;
@@ -3197,9 +3197,9 @@
     <div class="pb"><div class="pf ${total > norm ? "over" : ""}" style="width:${norm ? Math.min((total / norm) * 100, 100) : 0}%"></div></div>
   </div>
   <div style="margin-bottom:.75rem">
-    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px"><span>S.D.S.L.: ${oreSdsl}/${Math.round(maxSdsl)}h max (40%)</span><span style="color:${sdslPct > 100 ? "var(--err)" : sdslPct > 80 ? "var(--wrn)" : "var(--mut)"}">${sdslPct}%</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px"><span>S.D.S.L.: ${oreSdsl}/${Math.floor(maxSdsl)}h max (40%)</span><span style="color:${sdslPct > 100 ? "var(--err)" : sdslPct > 80 ? "var(--wrn)" : "var(--mut)"}">${sdslPct}%</span></div>
     <div class="pb"><div class="pf ${sdslPct > 100 ? "over" : sdslPct > 80 ? "warn" : ""}" style="width:${Math.min(sdslPct, 100)}%"></div></div>
-    ${sdslPct > 100 ? `<div class="sdsl-alert" style="margin-top:.4rem">⚠ Depășire max. ore S.D.S.L.! (${oreSdsl}h > ${Math.round(maxSdsl)}h)</div>` : ""}
+    ${sdslPct > 100 ? `<div class="sdsl-alert" style="margin-top:.4rem">⚠ Depășire max. ore S.D.S.L.! (${oreSdsl}h > ${Math.floor(maxSdsl)}h)</div>` : ""}
   </div>`;
 
         if (CP.role === "admin")
@@ -4991,7 +4991,7 @@
     <div class="sc"><div class="sc-v">${activeW.length}</div><div class="sc-l">Efectiv lucrători</div></div>
     <div class="sc"><div class="sc-v">${wdFull}</div><div class="sc-l">Zile lucrătoare</div></div>
     <div class="sc"><div class="sc-v">${normFull}</div><div class="sc-l">Normă lunară/pers.</div></div>
-    <div class="sc"><div class="sc-v" style="color:var(--wrn)">${Math.round(maxSdslFull)}</div><div class="sc-l">Max. ore S.D.S.L. (40%)</div></div>
+    <div class="sc"><div class="sc-v" style="color:var(--wrn)">${Math.floor(maxSdslFull)}</div><div class="sc-l">Max. ore S.D.S.L. (40%)</div></div>
   </div>`;
 
         const byW = {};
